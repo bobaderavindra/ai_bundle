@@ -29,6 +29,20 @@ spring:
           filters:
             - RewritePath=/api/portfolio/?(?<segment>.*), /portfolio/${segment}
 
+        - id: portfolio-trade
+          uri: ${investai.portfolio-service-url}
+          predicates:
+            - Path=/api/trade,/api/trade/**
+          filters:
+            - RewritePath=/api/trade/?(?<segment>.*), /trade/${segment}
+
+        - id: portfolio-allocation
+          uri: ${investai.portfolio-service-url}
+          predicates:
+            - Path=/api/allocation,/api/allocation/**
+          filters:
+            - RewritePath=/api/allocation/?(?<segment>.*), /allocation/${segment}
+
         - id: risk-service
           uri: ${investai.risk-service-url}
           predicates:

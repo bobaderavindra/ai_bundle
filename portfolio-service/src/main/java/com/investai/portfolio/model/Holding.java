@@ -76,4 +76,12 @@ public class Holding {
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
+
+    public void setQuantity(BigDecimal quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setAvgPrice(BigDecimal avgPrice) {
+        this.avgPrice = avgPrice;
+    }
 }

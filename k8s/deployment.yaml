@@ -99,6 +99,10 @@ spec:
                 secretKeyRef:
                   name: investai-secrets
                   key: auth-db-password
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: PORTFOLIO_TRADE_TOPIC
+              value: portfolio.trade.executed
           ports:
             - containerPort: 8082
 ---

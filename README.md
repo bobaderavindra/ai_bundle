@@ -95,6 +95,20 @@ curl -X POST http://localhost:8080/api/risk/var \
   -d '{"returns":[-0.02,0.01,-0.01,0.005,-0.03],"confidence":0.95}'
 ```
 
+6. Portfolio trades and allocation
+```bash
+curl -X GET http://localhost:8080/api/portfolio/<USER_ID> \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+curl -X POST http://localhost:8080/api/trade \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"portfolioId":"<PORTFOLIO_ID>","symbol":"AAPL","tradeType":"BUY","quantity":10,"price":182.50}'
+
+curl -X GET "http://localhost:8080/api/allocation?portfolioId=<PORTFOLIO_ID>" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
 ## Kubernetes
 
 Build and push images first, then deploy:

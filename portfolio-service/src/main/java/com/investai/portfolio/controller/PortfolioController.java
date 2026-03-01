@@ -31,8 +31,14 @@ public class PortfolioController {
         return ResponseEntity.ok(portfolioService.createPortfolio(userId, request.name()));
     }
 
-    @GetMapping
-    public ResponseEntity<List<Portfolio>> listPortfolios(@RequestHeader("X-User-Id") String userId) {
+    @GetMapping("/{userId}")
+    public ResponseEntity<List<Portfolio>> listPortfolios(
+            @PathVariable String userId,
+            @RequestHeader("X-User-Id") String authenticatedUserId
+    ) {
+        if (!userId.equals(authenticatedUserId)) {
+            throw new IllegalArgumentException("Access denied for user");
+        }
         return ResponseEntity.ok(portfolioService.listPortfolios(userId));
     }
 

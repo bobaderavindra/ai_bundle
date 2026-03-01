@@ -42,8 +42,44 @@ public class Trade {
     public Trade() {
     }
 
+    public Trade(Portfolio portfolio, String symbol, String tradeType, BigDecimal quantity, BigDecimal price) {
+        this.portfolio = portfolio;
+        this.symbol = symbol;
+        this.tradeType = tradeType;
+        this.quantity = quantity;
+        this.price = price;
+    }
+
     @PrePersist
     public void prePersist() {
         this.tradeTime = LocalDateTime.now();
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public Portfolio getPortfolio() {
+        return portfolio;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public String getTradeType() {
+        return tradeType;
+    }
+
+    public BigDecimal getQuantity() {
+        return quantity;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public LocalDateTime getTradeTime() {
+        return tradeTime;
     }
 }
