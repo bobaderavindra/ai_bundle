@@ -109,6 +109,22 @@ curl -X GET "http://localhost:8080/api/allocation?portfolioId=<PORTFOLIO_ID>" \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
+7. ML predict/train/model-info
+```bash
+curl -X POST http://localhost:8080/api/ml/train \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"prices":[100,102,105,107,110]}'
+
+curl -X POST http://localhost:8080/api/ml/predict \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"nextIndex":6}'
+
+curl -X GET http://localhost:8080/api/ml/model-info \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
 ## Kubernetes
 
 Build and push images first, then deploy:
