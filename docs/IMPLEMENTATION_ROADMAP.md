@@ -18,12 +18,21 @@ Use this roadmap to reach full interview-grade scope.
   - Monte Carlo simulation
   - Rebalance suggestions
 - Kubernetes manifests for each service
+- Frontend baseline:
+  - React + TypeScript + Vite app scaffold
+  - API integration via gateway
+  - Authentication flow (login/register/token persistence)
+  - Theme-aware dashboard shell
 
 ## Phase 2: Data + Persistence
 - Add PostgreSQL for auth/portfolio state
 - Add Redis for caching + token/session acceleration
 - Add vector database (pgvector, Qdrant, or Pinecone) for research-service
 - Add schema migrations with Flyway/Liquibase
+- Frontend data integration:
+  - Replace mocked UI values with persisted backend state
+  - Portfolio/holdings/trades pages with optimistic updates
+  - Error/loading/empty-state UX for every panel
 
 ## Phase 3: AI Market Prediction Engine
 - Replace linear toy model with:
@@ -35,6 +44,10 @@ Use this roadmap to reach full interview-grade scope.
   - confidenceScore
   - riskScore
 - Add SHAP explanation endpoint
+- Frontend AI views:
+  - Prediction console with confidence/risk overlays
+  - Model version selector (MLflow model registry integration)
+  - Explainability panel for SHAP/feature contribution
 
 ## Phase 4: Risk + Backtesting Expansion
 - Risk service:
@@ -46,6 +59,11 @@ Use this roadmap to reach full interview-grade scope.
   - RSI/MA crossover/ML-signal strategies
   - Transaction cost and slippage modeling
   - Equity curve + max drawdown + Sharpe + Sortino + Calmar
+- Frontend quant tooling:
+  - Advanced charting suite (candlestick, RSI, MACD, Bollinger)
+  - Drag-and-drop strategy builder with rule validation
+  - Backtest report UX (equity curve + metrics + trade log export)
+  - Portfolio allocation and risk heatmaps
 
 ## Phase 5: Enterprise System Design Features
 - OAuth2 authorization server
@@ -56,6 +74,11 @@ Use this roadmap to reach full interview-grade scope.
 - Circuit breakers and retries (Resilience4j)
 - API rate limiting
 - Policy-based access control and audit logs
+- Frontend enterprise UX:
+  - Role-based UI rendering (admin/advisor/investor)
+  - Tenant-aware SaaS navigation and org switching
+  - Audit-friendly activity feeds and approvals UI
+  - Feature flags and environment banners (dev/stage/prod)
 
 ## Phase 6: Cloud Readiness
 - Helm chart per environment (`dev`, `staging`, `prod`)
@@ -66,3 +89,8 @@ Use this roadmap to reach full interview-grade scope.
   - Run tests
   - Deploy via GitHub Actions + Argo CD
 - SLO dashboards and error-budget alerts
+- Frontend cloud delivery:
+  - S3 + CloudFront hosting with cache invalidation pipeline
+  - Separate config per environment (`VITE_API_BASE_URL`, websocket URL)
+  - WAF + TLS + CDN cache strategy for SPA assets and API gateway paths
+  - Lighthouse performance budgets and synthetic monitoring
