@@ -25,25 +25,25 @@ public class PortfolioController {
 
     @PostMapping
     public ResponseEntity<Portfolio> createPortfolio(
-            @RequestHeader("X-User-Email") String ownerEmail,
+            @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody CreatePortfolioRequest request
     ) {
-        return ResponseEntity.ok(portfolioService.createPortfolio(ownerEmail, request.name()));
+        return ResponseEntity.ok(portfolioService.createPortfolio(userId, request.name()));
     }
 
     @GetMapping
-    public ResponseEntity<List<Portfolio>> listPortfolios(@RequestHeader("X-User-Email") String ownerEmail) {
-        return ResponseEntity.ok(portfolioService.listPortfolios(ownerEmail));
+    public ResponseEntity<List<Portfolio>> listPortfolios(@RequestHeader("X-User-Id") String userId) {
+        return ResponseEntity.ok(portfolioService.listPortfolios(userId));
     }
 
     @PostMapping("/{portfolioId}/holding")
     public ResponseEntity<Portfolio> addHolding(
-            @RequestHeader("X-User-Email") String ownerEmail,
+            @RequestHeader("X-User-Id") String userId,
             @PathVariable String portfolioId,
             @Valid @RequestBody AddHoldingRequest request
     ) {
         return ResponseEntity.ok(
-                portfolioService.addHolding(ownerEmail, portfolioId, request.symbol(), request.quantity(), request.avgPrice())
+                portfolioService.addHolding(userId, portfolioId, request.symbol(), request.quantity(), request.avgPrice())
         );
     }
 

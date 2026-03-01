@@ -54,6 +54,18 @@ spec:
                 secretKeyRef:
                   name: investai-secrets
                   key: auth-jwt-secret
+            - name: AUTH_DB_URL
+              value: jdbc:postgresql://auth-db:5432/investai_auth
+            - name: AUTH_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-username
+            - name: AUTH_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-password
           ports:
             - containerPort: 8081
 ---
@@ -74,6 +86,19 @@ spec:
       containers:
         - name: portfolio-service
           image: investai/portfolio-service:latest
+          env:
+            - name: PORTFOLIO_DB_URL
+              value: jdbc:postgresql://auth-db:5432/investai_auth
+            - name: PORTFOLIO_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-username
+            - name: PORTFOLIO_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-password
           ports:
             - containerPort: 8082
 ---
@@ -156,3 +181,36 @@ spec:
           image: investai/optimization-service:latest
           ports:
             - containerPort: 8086
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-db
+  template:
+    metadata:
+      labels:
+        app: auth-db
+    spec:
+      containers:
+        - name: auth-db
+          image: postgres:16
+          env:
+            - name: POSTGRES_DB
+              value: investai_auth
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-password
+          ports:
+            - containerPort: 5432

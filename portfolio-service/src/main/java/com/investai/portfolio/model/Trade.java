@@ -1,6 +1,5 @@
 package com.investai.portfolio.model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -15,65 +14,36 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "holdings", schema = "invest_platform_ai")
-public class Holding {
+@Table(name = "trades", schema = "invest_platform_ai")
+public class Trade {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "portfolio_id", nullable = false)
-    @JsonBackReference
     private Portfolio portfolio;
 
     @Column(nullable = false, length = 20)
     private String symbol;
 
+    @Column(nullable = false, length = 10)
+    private String tradeType;
+
     @Column(nullable = false, precision = 18, scale = 4)
     private BigDecimal quantity;
 
     @Column(nullable = false, precision = 18, scale = 4)
-    private BigDecimal avgPrice;
+    private BigDecimal price;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime tradeTime;
 
-    public Holding() {
-    }
-
-    public Holding(Portfolio portfolio, String symbol, BigDecimal quantity, BigDecimal avgPrice) {
-        this.portfolio = portfolio;
-        this.symbol = symbol;
-        this.quantity = quantity;
-        this.avgPrice = avgPrice;
+    public Trade() {
     }
 
     @PrePersist
     public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public Portfolio getPortfolio() {
-        return portfolio;
-    }
-
-    public String getSymbol() {
-        return symbol;
-    }
-
-    public BigDecimal getQuantity() {
-        return quantity;
-    }
-
-    public BigDecimal getAvgPrice() {
-        return avgPrice;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
+        this.tradeTime = LocalDateTime.now();
     }
 }

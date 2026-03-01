@@ -1,6 +1,21 @@
 version: "3.9"
 
 services:
+  auth-db:
+    image: postgres:16
+    container_name: investai-auth-db
+    environment:
+      POSTGRES_DB: investai_auth
+      POSTGRES_USER: investai
+      POSTGRES_PASSWORD: investai
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U investai -d investai_auth"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   gateway-service:
     build: ./gateway-service
     container_name: investai-gateway
@@ -26,12 +41,25 @@ services:
     container_name: investai-auth
     environment:
       AUTH_JWT_SECRET: investai-super-secret-key-change-me-2026
+      AUTH_DB_URL: jdbc:postgresql://auth-db:5432/investai_auth
+      AUTH_DB_USERNAME: investai
+      AUTH_DB_PASSWORD: investai
+    depends_on:
+      auth-db:
+        condition: service_healthy
     ports:
       - "8081:8081"
 
   portfolio-service:
     build: ./portfolio-service
     container_name: investai-portfolio
+    environment:
+      PORTFOLIO_DB_URL: jdbc:postgresql://auth-db:5432/investai_auth
+      PORTFOLIO_DB_USERNAME: investai
+      PORTFOLIO_DB_PASSWORD: investai
+    depends_on:
+      auth-db:
+        condition: service_healthy
     ports:
       - "8082:8082"
 

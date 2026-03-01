@@ -53,6 +53,12 @@ curl -X POST http://localhost:8080/api/auth/login \
   -d '{"email":"user@investai.com","password":"Pass@123"}'
 ```
 
+2.1 Current user profile
+```bash
+curl -X GET http://localhost:8080/api/auth/me \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
 3. Create portfolio
 ```bash
 curl -X POST http://localhost:8080/api/portfolio \
@@ -111,7 +117,22 @@ Gateway routes are environment-driven using:
 
 This allows the same image to run unchanged across local Docker, Kubernetes, and cloud runtimes.
 
+## Auth Service Capabilities
+
+- Spring Boot + Spring Security
+- OAuth2 Authorization Server endpoints (`/oauth2/**`)
+- PostgreSQL-backed users
+- Endpoints:
+  - `POST /auth/register`
+  - `POST /auth/login`
+  - `POST /auth/refresh`
+  - `GET /auth/me`
+- JWT access token: 15 minutes
+- Refresh token: 7 days
+- Role claim included in JWT (`roles`)
+
 ## Next Implementation Phases
 
 See roadmap:
 - `docs/IMPLEMENTATION_ROADMAP.md`
+- `docs/DB_TABLE_SERVICE_MAPPING.md`
