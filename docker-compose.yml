@@ -139,5 +139,13 @@ services:
     ports:
       - "8086:8086"
 
+  frontend:
+    build: ./frontend
+    container_name: investai-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway-service
+
 volumes:
   mlflow-data:

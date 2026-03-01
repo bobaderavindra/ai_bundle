@@ -36,3 +36,5 @@ build/
 __pycache__/
 *.py[cod]
 .venv/
+frontend/node_modules/
+frontend/dist/

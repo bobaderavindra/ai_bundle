@@ -11,6 +11,7 @@ Enterprise AI investment platform using a microservices architecture with local-
 - `research-service` (FastAPI RAG starter, `8084`)
 - `ml-service` (FastAPI prediction starter, `8085`)
 - `optimization-service` (FastAPI portfolio optimization, `8086`)
+- `frontend` (React fintech dashboard via Nginx, `3000`)
 
 ## Local Run
 
@@ -29,6 +30,7 @@ Or use:
 
 Gateway entry point:
 - `http://localhost:8080`
+- Frontend UI: `http://localhost:3000`
 
 Health checks:
 - `http://localhost:8080/actuator/health`
@@ -153,6 +155,29 @@ curl -X POST http://localhost:8080/api/research/ask \
   -d '{"question":"What are the main risk factors mentioned?","topK":4}'
 ```
 
+## Frontend Features
+
+- Real-time WebSocket stock price streaming (with local fallback simulator)
+- Advanced charting using candlesticks + SMA indicator
+- Portfolio allocation pie charts
+- Drag-and-drop strategy builder UI
+- SaaS-style theme system (`Ocean`, `Sand`, `Slate`)
+- Role-based rendering (`ADMIN` panels are gated)
+- Production Docker image (Nginx static hosting)
+
+Frontend environment:
+- `frontend/.env.example`
+
+Local frontend dev:
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+You can now say:
+- "We use MLflow for experiment tracking and model versioning."
+
 ## Kubernetes
 
 Build and push images first, then deploy:
@@ -194,3 +219,21 @@ This allows the same image to run unchanged across local Docker, Kubernetes, and
 See roadmap:
 - `docs/IMPLEMENTATION_ROADMAP.md`
 - `docs/DB_TABLE_SERVICE_MAPPING.md`
+
+## Frontend AWS Deploy (S3 + CloudFront)
+
+Manual script:
+```powershell
+.\scripts\deploy-frontend-aws.ps1 -Bucket <S3_BUCKET> -DistributionId <CF_DISTRIBUTION_ID> -Region us-east-1
+```
+
+GitHub Actions:
+- Workflow: `.github/workflows/frontend-deploy.yml`
+- Required secrets:
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+  - `AWS_REGION`
+  - `AWS_S3_BUCKET`
+  - `AWS_CLOUDFRONT_DISTRIBUTION_ID`
+  - `VITE_API_BASE_URL`
+  - `VITE_STOCK_WS_URL`
