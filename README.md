@@ -131,6 +131,19 @@ curl -X GET http://localhost:8080/api/ml/model-info \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
+8. Research RAG (PDF -> embeddings -> FAISS -> LLM)
+```bash
+curl -X POST http://localhost:8080/api/research/upload \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -F "file=@C:/path/to/annual-report.pdf" \
+  -F "docId=acme-annual-2025"
+
+curl -X POST http://localhost:8080/api/research/ask \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{"question":"What are the main risk factors mentioned?","topK":4}'
+```
+
 ## Kubernetes
 
 Build and push images first, then deploy:

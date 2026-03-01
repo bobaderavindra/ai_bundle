@@ -101,6 +101,9 @@ services:
   research-service:
     build: ./research-service
     container_name: investai-research
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
     ports:
       - "8084:8084"
 
