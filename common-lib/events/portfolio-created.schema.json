@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PortfolioCreatedEvent",
+  "type": "object",
+  "properties": {
+    "eventType": {"const": "PORTFOLIO_CREATED"},
+    "portfolioId": {"type": "string"},
+    "ownerEmail": {"type": "string", "format": "email"},
+    "name": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"}
+  },
+  "required": ["eventType", "portfolioId", "ownerEmail", "name", "timestamp"]
+}

@@ -1,0 +1,64 @@
+server:
+  port: 8080
+
+investai:
+  auth-service-url: ${AUTH_SERVICE_URL:http://localhost:8081}
+  portfolio-service-url: ${PORTFOLIO_SERVICE_URL:http://localhost:8082}
+  risk-service-url: ${RISK_SERVICE_URL:http://localhost:8083}
+  research-service-url: ${RESEARCH_SERVICE_URL:http://localhost:8084}
+  ml-service-url: ${ML_SERVICE_URL:http://localhost:8085}
+  optimization-service-url: ${OPTIMIZATION_SERVICE_URL:http://localhost:8086}
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${investai.auth-service-url}
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/auth/?(?<segment>.*), /auth/${segment}
+
+        - id: portfolio-service
+          uri: ${investai.portfolio-service-url}
+          predicates:
+            - Path=/api/portfolio/**
+          filters:
+            - RewritePath=/api/portfolio/?(?<segment>.*), /portfolio/${segment}
+
+        - id: risk-service
+          uri: ${investai.risk-service-url}
+          predicates:
+            - Path=/api/risk/**
+          filters:
+            - RewritePath=/api/risk/?(?<segment>.*), /risk/${segment}
+
+        - id: research-service
+          uri: ${investai.research-service-url}
+          predicates:
+            - Path=/api/research/**
+          filters:
+            - RewritePath=/api/research/?(?<segment>.*), /research/${segment}
+
+        - id: ml-service
+          uri: ${investai.ml-service-url}
+          predicates:
+            - Path=/api/ml/**
+          filters:
+            - RewritePath=/api/ml/?(?<segment>.*), /ml/${segment}
+
+        - id: optimization-service
+          uri: ${investai.optimization-service-url}
+          predicates:
+            - Path=/api/optimization/**
+          filters:
+            - RewritePath=/api/optimization/?(?<segment>.*), /optimization/${segment}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

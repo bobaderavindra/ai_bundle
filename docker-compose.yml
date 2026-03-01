@@ -1,0 +1,60 @@
+version: "3.9"
+
+services:
+  gateway-service:
+    build: ./gateway-service
+    container_name: investai-gateway
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      PORTFOLIO_SERVICE_URL: http://portfolio-service:8082
+      RISK_SERVICE_URL: http://risk-service:8083
+      RESEARCH_SERVICE_URL: http://research-service:8084
+      ML_SERVICE_URL: http://ml-service:8085
+      OPTIMIZATION_SERVICE_URL: http://optimization-service:8086
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - portfolio-service
+      - risk-service
+      - research-service
+      - ml-service
+      - optimization-service
+
+  auth-service:
+    build: ./auth-service
+    container_name: investai-auth
+    environment:
+      AUTH_JWT_SECRET: investai-super-secret-key-change-me-2026
+    ports:
+      - "8081:8081"
+
+  portfolio-service:
+    build: ./portfolio-service
+    container_name: investai-portfolio
+    ports:
+      - "8082:8082"
+
+  risk-service:
+    build: ./risk-service
+    container_name: investai-risk
+    ports:
+      - "8083:8083"
+
+  research-service:
+    build: ./research-service
+    container_name: investai-research
+    ports:
+      - "8084:8084"
+
+  ml-service:
+    build: ./ml-service
+    container_name: investai-ml
+    ports:
+      - "8085:8085"
+
+  optimization-service:
+    build: ./optimization-service
+    container_name: investai-optimization
+    ports:
+      - "8086:8086"
