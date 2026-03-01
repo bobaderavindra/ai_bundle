@@ -86,6 +86,15 @@ services:
   risk-service:
     build: ./risk-service
     container_name: investai-risk
+    environment:
+      RISK_DB_HOST: auth-db
+      RISK_DB_PORT: 5432
+      RISK_DB_NAME: investai_auth
+      RISK_DB_USERNAME: investai
+      RISK_DB_PASSWORD: investai
+    depends_on:
+      auth-db:
+        condition: service_healthy
     ports:
       - "8083:8083"
 

@@ -123,6 +123,23 @@ spec:
       containers:
         - name: risk-service
           image: investai/risk-service:latest
+          env:
+            - name: RISK_DB_HOST
+              value: auth-db
+            - name: RISK_DB_PORT
+              value: "5432"
+            - name: RISK_DB_NAME
+              value: investai_auth
+            - name: RISK_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-username
+            - name: RISK_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: investai-secrets
+                  key: auth-db-password
           ports:
             - containerPort: 8083
 ---

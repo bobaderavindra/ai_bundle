@@ -93,6 +93,12 @@ curl -X POST http://localhost:8080/api/risk/var \
   -H "Authorization: Bearer <ACCESS_TOKEN>" \
   -H "Content-Type: application/json" \
   -d '{"returns":[-0.02,0.01,-0.01,0.005,-0.03],"confidence":0.95}'
+
+curl -X GET "http://localhost:8080/api/risk/var/<PORTFOLIO_ID>?confidence=0.95&simulations=5000" \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+curl -X GET http://localhost:8080/api/risk/drawdown/<PORTFOLIO_ID> \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
 6. Portfolio trades and allocation
