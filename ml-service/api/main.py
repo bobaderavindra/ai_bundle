@@ -5,6 +5,7 @@ from typing import List
 from inference.predict import predict_with_confidence
 from models.model_store import load_lstm_model, load_model_info, load_transformer_model, save_models
 from training.train_model import build_model_meta, train_lstm, train_transformer
+from tracking.mlflow_tracker import log_and_register_model
 
 app = FastAPI(title="InvestAI ML Service", version="1.0.0")
 
@@ -28,7 +29,25 @@ def train(req: TrainRequest):
     try:
         lstm_model = train_lstm(req.prices)
         transformer_model = train_transformer(req.prices)
+
+        lstm_tracking = log_and_register_model(
+            model_name="investai_lstm_model",
+            model_payload=lstm_model,
+            metrics={"beta_abs": abs(lstm_model["beta"])},
+            params={"model_type": "lstm", "data_points": len(req.prices)},
+        )
+        transformer_tracking = log_and_register_model(
+            model_name="investai_transformer_model",
+            model_payload=transformer_model,
+            metrics={"beta_abs": abs(transformer_model["beta"])},
+            params={"model_type": "transformer", "data_points": len(req.prices)},
+        )
+
         meta = build_model_meta(req.prices)
+        meta["registry"] = {
+            "lstm": lstm_tracking,
+            "transformer": transformer_tracking,
+        }
         save_models(lstm_model, transformer_model, meta)
         return {
             "message": "models trained",
@@ -36,10 +55,13 @@ def train(req: TrainRequest):
                 "lstm": lstm_model,
                 "transformer": transformer_model,
             },
+            "tracking": meta["registry"],
             "modelInfo": load_model_info(),
         }
     except ValueError as ex:
         raise HTTPException(status_code=400, detail=str(ex)) from ex
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(ex)}") from ex
 
 
 @app.post("/predict")

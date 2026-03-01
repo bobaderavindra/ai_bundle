@@ -1,6 +1,20 @@
 version: "3.9"
 
 services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.17.2
+    container_name: investai-mlflow
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root /mlflow/artifacts
+      --host 0.0.0.0
+      --port 5000
+    volumes:
+      - mlflow-data:/mlflow
+    ports:
+      - "5000:5000"
+
   kafka:
     image: bitnami/kafka:3.7
     container_name: investai-kafka
@@ -110,6 +124,12 @@ services:
   ml-service:
     build: ./ml-service
     container_name: investai-ml
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_EXPERIMENT_NAME: investai-ml
+    depends_on:
+      mlflow:
+        condition: service_started
     ports:
       - "8085:8085"
 
@@ -118,3 +138,6 @@ services:
     container_name: investai-optimization
     ports:
       - "8086:8086"
+
+volumes:
+  mlflow-data:

@@ -36,6 +36,7 @@ Health checks:
 - `http://localhost:8084/health`
 - `http://localhost:8085/health`
 - `http://localhost:8086/health`
+- `http://localhost:5000` (MLflow UI)
 
 ## API Quickstart
 
@@ -130,6 +131,14 @@ curl -X POST http://localhost:8080/api/ml/predict \
 curl -X GET http://localhost:8080/api/ml/model-info \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
+
+MLflow:
+- Tracking server: `http://localhost:5000`
+- Tracks experiments for LSTM and Transformer training runs
+- Registers model versions in MLflow Model Registry
+
+You can confidently state:
+- "We use MLflow for experiment tracking and model versioning."
 
 8. Research RAG (PDF -> embeddings -> FAISS -> LLM)
 ```bash
