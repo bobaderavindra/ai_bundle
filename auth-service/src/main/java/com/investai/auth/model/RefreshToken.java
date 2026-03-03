@@ -10,13 +10,14 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "refresh_tokens", schema = "invest_platform_ai")
 public class RefreshToken {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -41,7 +42,7 @@ public class RefreshToken {
         this.revoked = revoked;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 

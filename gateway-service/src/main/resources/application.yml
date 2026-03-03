@@ -1,19 +1,36 @@
 server:
-  port: 8080
+  port: 8088
 
 investai:
-  auth-service-url: ${AUTH_SERVICE_URL:http://localhost:8081}
-  portfolio-service-url: ${PORTFOLIO_SERVICE_URL:http://localhost:8082}
-  risk-service-url: ${RISK_SERVICE_URL:http://localhost:8083}
-  research-service-url: ${RESEARCH_SERVICE_URL:http://localhost:8084}
-  ml-service-url: ${ML_SERVICE_URL:http://localhost:8085}
-  optimization-service-url: ${OPTIMIZATION_SERVICE_URL:http://localhost:8086}
+  auth-service-url: ${AUTH_SERVICE_URL:http://localhost:8091}
+  portfolio-service-url: ${PORTFOLIO_SERVICE_URL:http://localhost:8092}
+  risk-service-url: ${RISK_SERVICE_URL:http://localhost:8093}
+  research-service-url: ${RESEARCH_SERVICE_URL:http://localhost:8094}
+  ml-service-url: ${ML_SERVICE_URL:http://localhost:8095}
+  optimization-service-url: ${OPTIMIZATION_SERVICE_URL:http://localhost:8096}
 
 spring:
   application:
     name: gateway-service
   cloud:
     gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:5173"
+              - "http://127.0.0.1:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders:
+              - "*"
+            allowCredentials: true
+            maxAge: 3600
       routes:
         - id: auth-service
           uri: ${investai.auth-service-url}

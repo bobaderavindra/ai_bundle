@@ -94,3 +94,11 @@ Use this roadmap to reach full interview-grade scope.
   - Separate config per environment (`VITE_API_BASE_URL`, websocket URL)
   - WAF + TLS + CDN cache strategy for SPA assets and API gateway paths
   - Lighthouse performance budgets and synthetic monitoring
+
+## Phase 7: Commands to run the application locally
+- Command to run Microservice locally 
+  - cd microservice
+  - .\..\mvnw.cmd spring-boot:run
+- Command to run Frontend locally
+  - cd frontend
+  - npm run dev

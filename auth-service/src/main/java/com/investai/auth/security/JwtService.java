@@ -3,13 +3,15 @@ package com.investai.auth.security;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
-import javax.crypto.SecretKey;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import java.util.UUID;
 
 @Component
 public class JwtService {
@@ -27,11 +29,11 @@ public class JwtService {
         this.refreshTokenTtlSeconds = refreshTokenTtlSeconds;
     }
 
-    public String createAccessToken(String userId, String email, String role) {
+    public String createAccessToken(UUID userId, String email, String role) {
         return createToken(userId, email, accessTokenTtlSeconds, "access", role);
     }
 
-    public String createRefreshToken(String userId, String email, String role) {
+    public String createRefreshToken(UUID userId, String email, String role) {
         return createToken(userId, email, refreshTokenTtlSeconds, "refresh", role);
     }
 
@@ -39,7 +41,7 @@ public class JwtService {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 
-    private String createToken(String userId, String email, long ttlSeconds, String type, String role) {
+    private String createToken(UUID userId, String email, long ttlSeconds, String type, String role) {
         Instant now = Instant.now();
         return Jwts.builder()
                 .subject(email)

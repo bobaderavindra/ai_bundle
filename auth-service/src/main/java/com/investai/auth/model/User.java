@@ -9,13 +9,14 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", schema = "invest_platform_ai")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -45,7 +46,7 @@ public class User {
         this.isEnabled = isEnabled;
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
