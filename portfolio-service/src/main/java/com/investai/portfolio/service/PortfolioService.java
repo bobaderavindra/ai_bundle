@@ -10,10 +10,8 @@ import com.investai.portfolio.repository.PortfolioRepository;
 import com.investai.portfolio.repository.TradeRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,31 +35,37 @@ public class PortfolioService {
     }
 
     @Transactional
-    public Portfolio createPortfolio(String userId, String name) {
+    public Portfolio createPortfolio(UUID userId, String name) {
         return repository.save(new Portfolio(userId, name));
     }
 
     public List<Portfolio> listPortfolios(String userId) {
-        return repository.findByUserId(userId);
+        return repository.findByUserId(parseUuid(userId, "userId"));
     }
 
     @Transactional
     public Portfolio addHolding(String userId, String portfolioId, String symbol, BigDecimal quantity, BigDecimal avgPrice) {
-        Portfolio portfolio = repository.findById(portfolioId)
+        UUID userUuid = parseUuid(userId, "userId");
+        UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
+
+        Portfolio portfolio = repository.findById(portfolioUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
-        if (!portfolio.getUserId().equals(userId)) {
+        if (!portfolio.getUserId().equals(userUuid)) {
             throw new IllegalArgumentException("Access denied for portfolio");
         }
         Holding holding = new Holding(portfolio, symbol.toUpperCase(), quantity, avgPrice);
         holdingRepository.save(holding);
-        return repository.findById(portfolioId).orElseThrow();
+        return repository.findById(portfolioUuid).orElseThrow();
     }
 
     @Transactional
     public Trade executeTrade(String userId, String portfolioId, String symbol, String tradeType, BigDecimal quantity, BigDecimal price) {
-        Portfolio portfolio = repository.findById(portfolioId)
+        UUID userUuid = parseUuid(userId, "userId");
+        UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
+
+        Portfolio portfolio = repository.findById(portfolioUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
-        if (!portfolio.getUserId().equals(userId)) {
+        if (!portfolio.getUserId().equals(userUuid)) {
             throw new IllegalArgumentException("Access denied for portfolio");
         }
 
@@ -71,7 +75,7 @@ public class PortfolioService {
         }
 
         String normalizedSymbol = symbol.toUpperCase();
-        Holding holding = holdingRepository.findByPortfolioIdAndSymbolIgnoreCase(portfolioId, normalizedSymbol)
+        Holding holding = holdingRepository.findByPortfolioIdAndSymbolIgnoreCase(portfolioUuid, normalizedSymbol)
                 .orElse(null);
 
         if (normalizedType.equals("BUY")) {
@@ -101,9 +105,9 @@ public class PortfolioService {
 
         Trade trade = tradeRepository.save(new Trade(portfolio, normalizedSymbol, normalizedType, quantity, price));
         tradeEventPublisher.publish(new TradeExecutedEvent(
-                trade.getId(),
+                trade.getId().toString(),
                 userId,
-                portfolioId,
+                portfolioUuid.toString(),
                 trade.getSymbol(),
                 trade.getTradeType(),
                 trade.getQuantity(),
@@ -114,13 +118,16 @@ public class PortfolioService {
     }
 
     public Map<String, Object> calculateAllocation(String userId, String portfolioId) {
-        Portfolio portfolio = repository.findById(portfolioId)
+        UUID userUuid = parseUuid(userId, "userId");
+        UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
+
+        Portfolio portfolio = repository.findById(portfolioUuid)
                 .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
-        if (!portfolio.getUserId().equals(userId)) {
+        if (!portfolio.getUserId().equals(userUuid)) {
             throw new IllegalArgumentException("Access denied for portfolio");
         }
 
-        List<Holding> holdings = holdingRepository.findByPortfolioId(portfolioId);
+        List<Holding> holdings = holdingRepository.findByPortfolioId(portfolioUuid);
         BigDecimal totalValue = holdings.stream()
                 .map(h -> h.getQuantity().multiply(h.getAvgPrice()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -150,5 +157,13 @@ public class PortfolioService {
 
         response.put("allocation", allocation);
         return response;
+    }
+
+    private UUID parseUuid(String value, String fieldName) {
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException(fieldName + " must be a valid UUID");
+        }
     }
 }

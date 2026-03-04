@@ -13,13 +13,14 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "holdings", schema = "invest_platform_ai")
 public class Holding {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "portfolio_id", nullable = false)
@@ -53,7 +54,7 @@ public class Holding {
         this.createdAt = LocalDateTime.now();
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 

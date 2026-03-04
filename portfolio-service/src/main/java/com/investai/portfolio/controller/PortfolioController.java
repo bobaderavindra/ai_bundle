@@ -5,6 +5,8 @@ import com.investai.portfolio.service.PortfolioService;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +30,7 @@ public class PortfolioController {
             @RequestHeader("X-User-Id") String userId,
             @Valid @RequestBody CreatePortfolioRequest request
     ) {
-        return ResponseEntity.ok(portfolioService.createPortfolio(userId, request.name()));
+        return ResponseEntity.ok(portfolioService.createPortfolio(UUID.fromString(userId), request.name()));
     }
 
     @GetMapping("/{userId}")

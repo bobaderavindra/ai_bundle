@@ -102,3 +102,11 @@ Use this roadmap to reach full interview-grade scope.
 - Command to run Frontend locally
   - cd frontend
   - npm run dev
+- Commands to run python ml-service
+  - cd ml-service
+    python -m venv .venv
+    .\.venv\Scripts\Activate.ps1
+    pip install -r requirements.txt
+    uvicorn api.main:app --host 0.0.0.0 --port 8095 --reload
+  - cd optimization-service
+    - uvicorn api.main:app --host 0.0.0.0 --port 8096 --reload

@@ -1,29 +1,22 @@
 package com.investai.portfolio.model;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "portfolios", schema = "invest_platform_ai")
 public class Portfolio {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private String id;
+    private UUID id;
 
     @Column(nullable = false)
-    private String userId;
+    private UUID userId;
 
     @Column(nullable = false)
     private String name;
@@ -38,7 +31,7 @@ public class Portfolio {
     public Portfolio() {
     }
 
-    public Portfolio(String userId, String name) {
+    public Portfolio(UUID userId, String name) {
         this.userId = userId;
         this.name = name;
     }
@@ -48,11 +41,11 @@ public class Portfolio {
         this.createdAt = LocalDateTime.now();
     }
 
-    public String getId() {
+    public UUID getId() {
         return id;
     }
 
-    public String getUserId() {
+    public UUID getUserId() {
         return userId;
     }
 
