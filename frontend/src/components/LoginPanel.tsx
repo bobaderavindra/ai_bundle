@@ -21,22 +21,58 @@ export default function LoginPanel() {
   }
 
   return (
-    <form className="card auth-card" onSubmit={onSubmit}>
-      <h2>{mode === "login" ? "Login" : "Register"}</h2>
-      <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+    <form className="login-card" onSubmit={onSubmit}>
+      <h2>{mode === "login" ? "Sign in" : "Create your account"}</h2>
+      <p className="login-subtitle">
+        {mode === "login" ? "Stay updated on your portfolio performance." : "Start with your team workspace in minutes."}
+      </p>
+
+      <label className="login-label" htmlFor="email">
+        Email
+      </label>
+      <input id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="name@company.com" />
+
       {mode === "register" && (
-        <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full name" />
+        <>
+          <label className="login-label" htmlFor="fullName">
+            Full name
+          </label>
+          <input
+            id="fullName"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Your full name"
+          />
+        </>
       )}
-      <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Password" />
+
+      <label className="login-label" htmlFor="password">
+        Password
+      </label>
+      <input
+        id="password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+        type="password"
+        placeholder="Enter password"
+      />
+
       {error && <div className="error">{error}</div>}
-      <button type="submit">{mode === "login" ? "Sign In" : "Create Account"}</button>
-      <button
-        type="button"
-        className="ghost"
-        onClick={() => setMode(mode === "login" ? "register" : "login")}
-      >
-        {mode === "login" ? "Need account?" : "Have account?"}
+
+      <button type="submit" className="login-submit">
+        {mode === "login" ? "Sign in" : "Create account"}
       </button>
+
+      <p className="login-switch">
+        {mode === "login" ? "New to InvestAI?" : "Already have an account?"}
+        <button
+          type="button"
+          className="login-inline-button"
+          onClick={() => setMode(mode === "login" ? "register" : "login")}
+        >
+          {mode === "login" ? "Join now" : "Sign in"}
+        </button>
+      </p>
     </form>
   );
 }
