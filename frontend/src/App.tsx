@@ -26,6 +26,7 @@ const MIN_COL_SPAN = 3;
 const MAX_COL_SPAN = 12;
 const MIN_ROW_SPAN = 1;
 const MAX_ROW_SPAN = 4;
+const GRID_LOCK_STORAGE_KEY = "investai.dashboard.gridLock";
 
 export default function App() {
   const { auth } = useAuth();
@@ -35,8 +36,14 @@ export default function App() {
       <main className="auth-shell">
         <header className="auth-topbar">
           <div className="auth-brand">
-            <span className="auth-brand-text">InvestAI</span>
-            <span className="auth-brand-mark">in</span>
+            <span className="auth-brand-logo" aria-hidden="true">
+              <span className="auth-brand-logo-shine" />
+              <span className="auth-brand-logo-core">IA</span>
+            </span>
+            <span className="auth-brand-text-wrap">
+              <span className="auth-brand-text">InvestAI</span>
+              <span className="auth-brand-subtext">SAR Intelligence Suite</span>
+            </span>
           </div>
           <a className="auth-top-link" href="#login">
             Sign in
@@ -127,6 +134,10 @@ export default function App() {
     Object.fromEntries(visibleWidgets.map((widget) => [widget.id, widget.defaultSize]))
   );
   const [draggedWidgetId, setDraggedWidgetId] = useState<string | null>(null);
+  const [isGridLocked, setIsGridLocked] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return window.localStorage.getItem(GRID_LOCK_STORAGE_KEY) === "locked";
+  });
 
   useEffect(() => {
     const visibleIds = new Set(visibleWidgets.map((widget) => widget.id));
@@ -146,7 +157,14 @@ export default function App() {
     });
   }, [visibleWidgets]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(GRID_LOCK_STORAGE_KEY, isGridLocked ? "locked" : "unlocked");
+  }, [isGridLocked]);
+
   function moveWidget(id: string, direction: "up" | "down") {
+    if (isGridLocked) return;
+
     setWidgetOrder((prev) => {
       const index = prev.indexOf(id);
       if (index === -1) return prev;
@@ -161,6 +179,8 @@ export default function App() {
   }
 
   function resizeWidget(id: string, axis: "width" | "height", delta: -1 | 1) {
+    if (isGridLocked) return;
+
     setWidgetSizes((prev) => {
       const current = prev[id];
       if (!current) return prev;
@@ -181,6 +201,7 @@ export default function App() {
   }
 
   function onDropOnWidget(targetId: string) {
+    if (isGridLocked) return;
     if (!draggedWidgetId || draggedWidgetId === targetId) return;
     setWidgetOrder((prev) => {
       const sourceIndex = prev.indexOf(draggedWidgetId);
@@ -199,7 +220,7 @@ export default function App() {
 
   return (
     <main className="shell dashboard-shell">
-      <HeaderBar />
+      <HeaderBar isGridLocked={isGridLocked} onToggleGridLock={() => setIsGridLocked((prev) => !prev)} />
       <section className="dashboard-grid">
         {widgetOrder.map((widgetId) => {
           const widget = widgetById.get(widgetId);
@@ -214,7 +235,9 @@ export default function App() {
                 gridColumn: `span ${size.colSpan}`,
                 gridRow: `span ${size.rowSpan}`
               }}
-              onDragOver={(event) => event.preventDefault()}
+              onDragOver={(event) => {
+                if (!isGridLocked) event.preventDefault();
+              }}
               onDrop={() => onDropOnWidget(widget.id)}
             >
               <div className="widget-toolbar">
@@ -223,29 +246,60 @@ export default function App() {
                   <button
                     type="button"
                     className="widget-btn"
-                    draggable
+                    draggable={!isGridLocked}
                     onDragStart={() => setDraggedWidgetId(widget.id)}
                     onDragEnd={() => setDraggedWidgetId(null)}
                     title="Drag to move"
+                    disabled={isGridLocked}
                   >
                     Drag
                   </button>
-                  <button type="button" className="widget-btn" onClick={() => moveWidget(widget.id, "up")}>
+                  <button
+                    type="button"
+                    className="widget-btn"
+                    onClick={() => moveWidget(widget.id, "up")}
+                    disabled={isGridLocked}
+                  >
                     Up
                   </button>
-                  <button type="button" className="widget-btn" onClick={() => moveWidget(widget.id, "down")}>
+                  <button
+                    type="button"
+                    className="widget-btn"
+                    onClick={() => moveWidget(widget.id, "down")}
+                    disabled={isGridLocked}
+                  >
                     Down
                   </button>
-                  <button type="button" className="widget-btn" onClick={() => resizeWidget(widget.id, "width", -1)}>
+                  <button
+                    type="button"
+                    className="widget-btn"
+                    onClick={() => resizeWidget(widget.id, "width", -1)}
+                    disabled={isGridLocked}
+                  >
                     W-
                   </button>
-                  <button type="button" className="widget-btn" onClick={() => resizeWidget(widget.id, "width", 1)}>
+                  <button
+                    type="button"
+                    className="widget-btn"
+                    onClick={() => resizeWidget(widget.id, "width", 1)}
+                    disabled={isGridLocked}
+                  >
                     W+
                   </button>
-                  <button type="button" className="widget-btn" onClick={() => resizeWidget(widget.id, "height", -1)}>
+                  <button
+                    type="button"
+                    className="widget-btn"
+                    onClick={() => resizeWidget(widget.id, "height", -1)}
+                    disabled={isGridLocked}
+                  >
                     H-
                   </button>
-                  <button type="button" className="widget-btn" onClick={() => resizeWidget(widget.id, "height", 1)}>
+                  <button
+                    type="button"
+                    className="widget-btn"
+                    onClick={() => resizeWidget(widget.id, "height", 1)}
+                    disabled={isGridLocked}
+                  >
                     H+
                   </button>
                 </div>
