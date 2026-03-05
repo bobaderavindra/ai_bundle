@@ -337,6 +337,68 @@ body {
   gap: 14px;
 }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-auto-rows: 140px;
+  gap: 14px;
+}
+
+.widget-shell {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 94%, var(--surface-soft) 6%);
+  box-shadow: 0 8px 28px rgba(15, 38, 61, 0.05);
+  padding: 8px;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+
+.widget-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 8px;
+  border-bottom: 1px dashed var(--border);
+  margin-bottom: 8px;
+}
+
+.widget-toolbar strong {
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+  color: var(--muted);
+}
+
+.widget-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.widget-btn {
+  width: auto !important;
+  margin-top: 0 !important;
+  padding: 6px 9px !important;
+  border-radius: 7px !important;
+  font-size: 0.74rem;
+  line-height: 1;
+}
+
+.widget-body {
+  min-height: 0;
+  overflow: auto;
+}
+
+.widget-body > .card {
+  height: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
 .card {
   border: 1px solid var(--border);
   background: var(--surface);
@@ -346,23 +408,23 @@ body {
   animation: slide-up 0.34s ease both;
 }
 
-.grid .card:nth-child(2) {
+.dashboard-grid .widget-shell:nth-child(2) .card {
   animation-delay: 0.05s;
 }
 
-.grid .card:nth-child(3) {
+.dashboard-grid .widget-shell:nth-child(3) .card {
   animation-delay: 0.09s;
 }
 
-.grid .card:nth-child(4) {
+.dashboard-grid .widget-shell:nth-child(4) .card {
   animation-delay: 0.13s;
 }
 
-.grid .card:nth-child(5) {
+.dashboard-grid .widget-shell:nth-child(5) .card {
   animation-delay: 0.17s;
 }
 
-.grid .card:nth-child(6) {
+.dashboard-grid .widget-shell:nth-child(6) .card {
   animation-delay: 0.21s;
 }
 
@@ -524,6 +586,10 @@ body {
   .header-menu {
     gap: 12px;
   }
+
+  .dashboard-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 700px) {
@@ -550,5 +616,15 @@ body {
 
   .builder {
     grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+  }
+
+  .widget-shell {
+    grid-column: span 1 !important;
+    grid-row: span 1 !important;
   }
 }
