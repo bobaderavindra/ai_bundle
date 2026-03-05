@@ -57,7 +57,7 @@ export default function App() {
   }
 
   return (
-    <main className="shell">
+    <main className="shell dashboard-shell">
       <HeaderBar />
       <section className="grid">
         <StockTicker />

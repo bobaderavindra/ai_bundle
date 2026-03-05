@@ -40,22 +40,22 @@ export default function CandleChart() {
 
     chartRef.current = createChart(ref.current, {
       height: 320,
-      layout: { background: { color: "#101820" }, textColor: "#cfd9e0" },
-      grid: { vertLines: { color: "#1c2d3d" }, horzLines: { color: "#1c2d3d" } }
+      layout: { background: { color: "#ffffff" }, textColor: "#5f7388" },
+      grid: { vertLines: { color: "#e8f0f7" }, horzLines: { color: "#e8f0f7" } }
     });
 
     const c = chartRef.current.addCandlestickSeries({
-      upColor: "#37cf9c",
-      downColor: "#ff7f66",
+      upColor: "#1f8f5f",
+      downColor: "#d45745",
       borderVisible: false,
-      wickUpColor: "#37cf9c",
-      wickDownColor: "#ff7f66"
+      wickUpColor: "#1f8f5f",
+      wickDownColor: "#d45745"
     });
     c.setData(candles);
 
     const closes = candles.map((d) => d.close);
     const sma14 = sma(closes, 14);
-    const smaSeries = chartRef.current.addLineSeries({ color: "#ffd166", lineWidth: 2 });
+    const smaSeries = chartRef.current.addLineSeries({ color: "#0a66c2", lineWidth: 2 });
     smaSeries.setData(
       candles
         .map((d, i) => (sma14[i] ? { time: d.time, value: Number(sma14[i]!.toFixed(2)) } : null))

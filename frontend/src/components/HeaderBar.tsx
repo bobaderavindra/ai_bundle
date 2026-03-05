@@ -7,9 +7,21 @@ export default function HeaderBar() {
 
   return (
     <header className="header">
-      <div>
-        <h1>InvestAI Fintech Console</h1>
-        <p>Enterprise portfolio intelligence</p>
+      <div className="header-left">
+        <div className="header-brand">
+          <span className="header-brand-mark">in</span>
+          <div>
+            <h1>InvestAI</h1>
+            <p>Enterprise portfolio intelligence</p>
+          </div>
+        </div>
+        <nav className="header-menu" aria-label="Primary">
+          <a href="#">Products</a>
+          <a href="#">Solutions</a>
+          <a href="#">Pricing</a>
+          <a href="#">Docs</a>
+          <a href="#">Support</a>
+        </nav>
       </div>
       <div className="header-actions">
         <select value={theme} onChange={(e) => setTheme(e.target.value as "ocean" | "sand" | "slate")}>
