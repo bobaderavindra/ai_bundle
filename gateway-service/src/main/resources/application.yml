@@ -4,8 +4,8 @@ server:
 investai:
   auth-service-url: ${AUTH_SERVICE_URL:http://localhost:8091}
   portfolio-service-url: ${PORTFOLIO_SERVICE_URL:http://localhost:8092}
-  risk-service-url: ${RISK_SERVICE_URL:http://localhost:8093}
-  research-service-url: ${RESEARCH_SERVICE_URL:http://localhost:8094}
+  risk-service-url: ${RISK_SERVICE_URL:http://localhost:8098}
+  research-service-url: ${RESEARCH_SERVICE_URL:http://localhost:8097}
   ml-service-url: ${ML_SERVICE_URL:http://localhost:8095}
   optimization-service-url: ${OPTIMIZATION_SERVICE_URL:http://localhost:8096}
 

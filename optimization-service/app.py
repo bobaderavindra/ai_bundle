@@ -1,4 +1,6 @@
-from typing import List
+from __future__ import annotations
+
+from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field, model_validator
@@ -11,8 +13,10 @@ from engine.mean_variance import (
 )
 from engine.monte_carlo import simulate_portfolio_paths
 from engine.risk_parity import risk_parity_weights
+from messaging.kafka_bus import KafkaBus
 
 app = FastAPI(title="InvestAI Optimization Service", version="1.0.0")
+kafka_bus = KafkaBus()
 
 
 class AssetInput(BaseModel):
@@ -84,11 +88,48 @@ class RebalanceRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "up"}
+    kafka_status = kafka_bus.status()
+    warnings = kafka_status.get("warnings", [])
+    if warnings:
+        return {
+            "status": "degraded",
+            "service": "optimization-service",
+            "warnings": warnings,
+            "kafka": {
+                "enabled": kafka_status["enabled"],
+                "bootstrapServers": kafka_status["bootstrapServers"],
+                "producerConnected": kafka_status["producerConnected"],
+                "consumerRunning": kafka_status["consumerRunning"],
+                "lastError": kafka_status["lastError"],
+            },
+        }
+    return {"status": "up", "service": "optimization-service"}
+
+
+@app.on_event("startup")
+def startup() -> None:
+    kafka_bus.start()
+
+
+@app.on_event("shutdown")
+def shutdown() -> None:
+    kafka_bus.shutdown()
+
+
+def _publish(event_type: str, payload: Dict[str, Any], key: str | None = None) -> None:
+    kafka_bus.publish(event_type=event_type, payload=payload, key=key)
 
 
 @app.post("/optimization/mean-variance")
 def mean_variance(request: MeanVarianceRequest):
+    _publish(
+        "optimization.mean_variance.requested",
+        {
+            "assetCount": len(request.assets),
+            "riskFreeRate": request.riskFreeRate,
+            "iterations": request.iterations,
+        },
+    )
     try:
         expected_returns = [asset.expectedReturn for asset in request.assets]
         volatilities = [asset.volatility for asset in request.assets]
@@ -109,18 +150,30 @@ def mean_variance(request: MeanVarianceRequest):
             for asset, weight in zip(request.assets, weights)
         ]
 
-        return {
+        response = {
             "suggestedAllocation": allocation,
             "expectedReturn": expected,
             "expectedVolatility": volatility,
             "sharpeRatio": sharpe,
         }
+        _publish(
+            "optimization.mean_variance.completed",
+            {
+                "assetCount": len(request.assets),
+                "expectedReturn": expected,
+                "expectedVolatility": volatility,
+                "sharpeRatio": sharpe,
+            },
+        )
+        return response
     except ValueError as ex:
+        _publish("optimization.mean_variance.failed", {"error": str(ex)})
         raise HTTPException(status_code=400, detail=str(ex)) from ex
 
 
 @app.post("/optimization/risk-parity")
 def risk_parity(request: RiskParityRequest):
+    _publish("optimization.risk_parity.requested", {"assetCount": len(request.assets)})
     try:
         volatilities = [asset.volatility for asset in request.assets]
         weights = risk_parity_weights(volatilities)
@@ -128,13 +181,24 @@ def risk_parity(request: RiskParityRequest):
             {"symbol": asset.symbol, "weight": round(weight, 6)}
             for asset, weight in zip(request.assets, weights)
         ]
-        return {"suggestedAllocation": allocation}
+        response = {"suggestedAllocation": allocation}
+        _publish("optimization.risk_parity.completed", {"assetCount": len(request.assets)})
+        return response
     except ValueError as ex:
+        _publish("optimization.risk_parity.failed", {"error": str(ex)})
         raise HTTPException(status_code=400, detail=str(ex)) from ex
 
 
 @app.post("/optimization/monte-carlo")
 def monte_carlo(request: MonteCarloRequest):
+    _publish(
+        "optimization.monte_carlo.requested",
+        {
+            "assetCount": len(request.assets),
+            "simulations": request.simulations,
+            "horizonDays": request.horizonDays,
+        },
+    )
     try:
         expected_returns = [asset.expectedReturn for asset in request.assets]
         volatilities = [asset.volatility for asset in request.assets]
@@ -152,7 +216,7 @@ def monte_carlo(request: MonteCarloRequest):
         percentile_95 = finals_sorted[max(int(0.95 * len(finals_sorted)) - 1, 0)]
         average = sum(finals) / len(finals)
 
-        return {
+        response = {
             "simulations": request.simulations,
             "horizonDays": request.horizonDays,
             "initialValue": request.initialValue,
@@ -161,12 +225,26 @@ def monte_carlo(request: MonteCarloRequest):
             "p50FinalValue": percentile_50,
             "p95FinalValue": percentile_95,
         }
+        _publish(
+            "optimization.monte_carlo.completed",
+            {
+                "simulations": request.simulations,
+                "horizonDays": request.horizonDays,
+                "averageFinalValue": average,
+            },
+        )
+        return response
     except ValueError as ex:
+        _publish("optimization.monte_carlo.failed", {"error": str(ex)})
         raise HTTPException(status_code=400, detail=str(ex)) from ex
 
 
 @app.post("/optimization/rebalance")
 def rebalance(request: RebalanceRequest):
+    _publish(
+        "optimization.rebalance.requested",
+        {"positions": len(request.currentWeights), "threshold": request.threshold},
+    )
     trades = []
     for idx, (current, target) in enumerate(zip(request.currentWeights, request.targetWeights)):
         delta = target - current
@@ -186,4 +264,19 @@ def rebalance(request: RebalanceRequest):
             }
         )
 
-    return {"threshold": request.threshold, "actions": trades}
+    response = {"threshold": request.threshold, "actions": trades}
+    action_counts = {"buy": 0, "sell": 0, "hold": 0}
+    for trade in trades:
+        action_counts[trade["action"]] += 1
+    _publish("optimization.rebalance.completed", {"threshold": request.threshold, **action_counts})
+    return response
+
+
+@app.get("/optimization/events/recent")
+def recent_events():
+    return {"events": kafka_bus.recent_messages()}
+
+
+@app.get("/optimization/events/status")
+def events_status():
+    return kafka_bus.status()

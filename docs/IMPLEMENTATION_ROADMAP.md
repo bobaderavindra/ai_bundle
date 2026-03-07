@@ -110,3 +110,67 @@ Use this roadmap to reach full interview-grade scope.
     uvicorn api.main:app --host 0.0.0.0 --port 8095 --reload
   - cd optimization-service
     - uvicorn api.main:app --host 0.0.0.0 --port 8096 --reload
+
+## Phase 8: Commands to run the application locally
+The two supporting infrastructure channels (Kafka, MLflow) that also carry communication in this stack.
+
+The 9 core app components communicate like this:
+- 1.Frontend
+- 2.Gateway Service
+- 3.Auth Service
+- 4.Portfolio Service
+- 5.Risk Service
+- 6.Research Service
+- 7.ML Service
+- 8.Optimization Service
+- 9.Auth Service
+
+High-level flow:
+- Frontend → Gateway → Target service → (DB/infra) → Gateway → Frontend
+
+Key communication patterns:
+All browser API calls go to Gateway-service microservice
+
+/api/...
+
+Gateway routes by path:
+/api/auth/**                 → Auth
+/api/portfolio/**            → Portfolio
+/api/trade/**                → Portfolio
+/api/allocation/**           → Portfolio
+/api/risk/**                 → Risk
+/api/research/**             → Research
+/api/ml/**                   → ML
+/api/optimization/**         → Optimization
+
+- Authentication flow:
+For protected routes Gateway first calls Auth Service:
+/auth/validate      with the Bearer token.
+- If the token is valid, the Gateway forwards the request and injects identity headers:
+X-User-Id, X-User-Email, X-User-Roles
+
+- Auth and Portfolio persist/read data in PostgreSQL.
+
+- Risk reads trade prices directly from PostgreSQL to compute VaR/drawdown.
+
+- ML talks to MLflow (supporting infra) for experiment/model tracking.
+
+- Portfolio publishes trade events to Kafka (supporting infra).
+
+- Research can call external OpenAI API when key is configured.
+
+So: client-to-service traffic is centralized through Gateway-service 
+to infra traffic is direct (DB/Kafka/MLflow/OpenAI).
+
+- cd C:\RDC\kafka
+  - Start Zookeeper:
+    - C:\RDC\kafka_2.12-3.9.2> bin\windows\zookeeper-server-start.bat config\zookeeper.properties
+  - Now start Kafka:
+    - C:\RDC\kafka_2.12-3.9.2>  bin\windows\kafka-server-start.bat config\server.properties
+  - Test Kafka on Command Prompt:
+    - Create topic:
+      -  C:\RDC\kafka_2.12-3.9.2> bin\windows\kafka-topics.bat --create --topic invest-topic --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
+    - Start producer:
+      - C:\RDC\kafka_2.12-3.9.2> bin\windows\kafka-console-producer.bat --topic invest-topic --bootstrap-server localhost:9092
+    - Start consumer:
+      - C:\RDC\kafka_2.12-3.9.2> bin\windows\kafka-console-consumer.bat --topic invest-topic --from-beginning --bootstrap-server localhost:9092

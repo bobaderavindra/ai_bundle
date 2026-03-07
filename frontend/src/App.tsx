@@ -7,6 +7,7 @@ import AllocationChart from "./components/AllocationChart";
 import StrategyBuilder from "./components/StrategyBuilder";
 import TradePanel from "./components/TradePanel";
 import AdminPanel from "./components/AdminPanel";
+import LifeMobileDashboard from "./components/LifeMobileDashboard";
 import { useAuth } from "./state/AuthContext";
 
 interface WidgetSize {
@@ -27,6 +28,7 @@ const MAX_COL_SPAN = 12;
 const MIN_ROW_SPAN = 1;
 const MAX_ROW_SPAN = 4;
 const GRID_LOCK_STORAGE_KEY = "investai.dashboard.gridLock";
+const DASHBOARD_VIEW_STORAGE_KEY = "investai.dashboard.activeView";
 
 export default function App() {
   const { auth } = useAuth();
@@ -138,6 +140,12 @@ export default function App() {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(GRID_LOCK_STORAGE_KEY) === "locked";
   });
+  const [activeDashboard, setActiveDashboard] = useState<"classic" | "life">(() => {
+    if (typeof window === "undefined") return "life";
+    const savedView = window.localStorage.getItem(DASHBOARD_VIEW_STORAGE_KEY);
+    if (savedView === "classic" || savedView === "life") return savedView;
+    return "life";
+  });
 
   useEffect(() => {
     const visibleIds = new Set(visibleWidgets.map((widget) => widget.id));
@@ -161,6 +169,11 @@ export default function App() {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(GRID_LOCK_STORAGE_KEY, isGridLocked ? "locked" : "unlocked");
   }, [isGridLocked]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(DASHBOARD_VIEW_STORAGE_KEY, activeDashboard);
+  }, [activeDashboard]);
 
   function moveWidget(id: string, direction: "up" | "down") {
     if (isGridLocked) return;
@@ -217,98 +230,113 @@ export default function App() {
   }
 
   const widgetById = new Map(visibleWidgets.map((widget) => [widget.id, widget]));
+  const classicDashboardContent = (
+    <section className="dashboard-grid">
+      {widgetOrder.map((widgetId) => {
+        const widget = widgetById.get(widgetId);
+        if (!widget) return null;
+        const size = widgetSizes[widget.id] ?? widget.defaultSize;
+
+        return (
+          <article
+            key={widget.id}
+            className="widget-shell"
+            style={{
+              gridColumn: `span ${size.colSpan}`,
+              gridRow: `span ${size.rowSpan}`
+            }}
+            onDragOver={(event) => {
+              if (!isGridLocked) event.preventDefault();
+            }}
+            onDrop={() => onDropOnWidget(widget.id)}
+          >
+            <div className="widget-toolbar">
+              <strong>{widget.title}</strong>
+              <div className="widget-actions">
+                <button
+                  type="button"
+                  className="widget-btn"
+                  draggable={!isGridLocked}
+                  onDragStart={() => setDraggedWidgetId(widget.id)}
+                  onDragEnd={() => setDraggedWidgetId(null)}
+                  title="Drag to move"
+                  disabled={isGridLocked}
+                >
+                  Drag
+                </button>
+                <button
+                  type="button"
+                  className="widget-btn"
+                  onClick={() => moveWidget(widget.id, "up")}
+                  disabled={isGridLocked}
+                >
+                  Up
+                </button>
+                <button
+                  type="button"
+                  className="widget-btn"
+                  onClick={() => moveWidget(widget.id, "down")}
+                  disabled={isGridLocked}
+                >
+                  Down
+                </button>
+                <button
+                  type="button"
+                  className="widget-btn"
+                  onClick={() => resizeWidget(widget.id, "width", -1)}
+                  disabled={isGridLocked}
+                >
+                  W-
+                </button>
+                <button
+                  type="button"
+                  className="widget-btn"
+                  onClick={() => resizeWidget(widget.id, "width", 1)}
+                  disabled={isGridLocked}
+                >
+                  W+
+                </button>
+                <button
+                  type="button"
+                  className="widget-btn"
+                  onClick={() => resizeWidget(widget.id, "height", -1)}
+                  disabled={isGridLocked}
+                >
+                  H-
+                </button>
+                <button
+                  type="button"
+                  className="widget-btn"
+                  onClick={() => resizeWidget(widget.id, "height", 1)}
+                  disabled={isGridLocked}
+                >
+                  H+
+                </button>
+              </div>
+            </div>
+            <div className="widget-body">{widget.content}</div>
+          </article>
+        );
+      })}
+    </section>
+  );
 
   return (
     <main className="shell dashboard-shell">
-      <HeaderBar isGridLocked={isGridLocked} onToggleGridLock={() => setIsGridLocked((prev) => !prev)} />
-      <section className="dashboard-grid">
-        {widgetOrder.map((widgetId) => {
-          const widget = widgetById.get(widgetId);
-          if (!widget) return null;
-          const size = widgetSizes[widget.id] ?? widget.defaultSize;
-
-          return (
-            <article
-              key={widget.id}
-              className="widget-shell"
-              style={{
-                gridColumn: `span ${size.colSpan}`,
-                gridRow: `span ${size.rowSpan}`
-              }}
-              onDragOver={(event) => {
-                if (!isGridLocked) event.preventDefault();
-              }}
-              onDrop={() => onDropOnWidget(widget.id)}
-            >
-              <div className="widget-toolbar">
-                <strong>{widget.title}</strong>
-                <div className="widget-actions">
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    draggable={!isGridLocked}
-                    onDragStart={() => setDraggedWidgetId(widget.id)}
-                    onDragEnd={() => setDraggedWidgetId(null)}
-                    title="Drag to move"
-                    disabled={isGridLocked}
-                  >
-                    Drag
-                  </button>
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    onClick={() => moveWidget(widget.id, "up")}
-                    disabled={isGridLocked}
-                  >
-                    Up
-                  </button>
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    onClick={() => moveWidget(widget.id, "down")}
-                    disabled={isGridLocked}
-                  >
-                    Down
-                  </button>
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    onClick={() => resizeWidget(widget.id, "width", -1)}
-                    disabled={isGridLocked}
-                  >
-                    W-
-                  </button>
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    onClick={() => resizeWidget(widget.id, "width", 1)}
-                    disabled={isGridLocked}
-                  >
-                    W+
-                  </button>
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    onClick={() => resizeWidget(widget.id, "height", -1)}
-                    disabled={isGridLocked}
-                  >
-                    H-
-                  </button>
-                  <button
-                    type="button"
-                    className="widget-btn"
-                    onClick={() => resizeWidget(widget.id, "height", 1)}
-                    disabled={isGridLocked}
-                  >
-                    H+
-                  </button>
-                </div>
-              </div>
-              <div className="widget-body">{widget.content}</div>
-            </article>
-          );
-        })}
-      </section>
+      <HeaderBar
+        isGridLocked={isGridLocked}
+        onToggleGridLock={() => setIsGridLocked((prev) => !prev)}
+        activeDashboard={activeDashboard}
+        onSwitchDashboard={setActiveDashboard}
+      />
+      <div className="dashboard-content-shell">
+        <LifeMobileDashboard
+          activeDashboard={activeDashboard}
+          onOpenMainDashboard={() => setActiveDashboard("life")}
+          onOpenOtherDashboard={() => setActiveDashboard("classic")}
+          centerContent={classicDashboardContent}
+        />
+      </div>
     </main>
   );
 }

@@ -155,6 +155,35 @@ curl -X POST http://localhost:8080/api/research/ask \
   -d '{"question":"What are the main risk factors mentioned?","topK":4}'
 ```
 
+9. Optimization Kafka events (publish + consume)
+```bash
+# Trigger optimization to publish events to Kafka topic: optimization.events
+curl -X POST http://localhost:8080/api/optimization/mean-variance \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assets":[
+      {"symbol":"AAPL","expectedReturn":0.14,"volatility":0.25},
+      {"symbol":"MSFT","expectedReturn":0.12,"volatility":0.20},
+      {"symbol":"GOOGL","expectedReturn":0.13,"volatility":0.23}
+    ],
+    "correlationMatrix":[
+      [1.0,0.6,0.55],
+      [0.6,1.0,0.5],
+      [0.55,0.5,1.0]
+    ],
+    "riskFreeRate":0.03
+  }'
+
+# Read optimization Kafka consumer status
+curl -X GET http://localhost:8080/api/optimization/events/status \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+
+# Read most recent consumed Kafka messages in optimization-service
+curl -X GET http://localhost:8080/api/optimization/events/recent \
+  -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
 ## Frontend Features
 
 - Real-time WebSocket stock price streaming (with local fallback simulator)

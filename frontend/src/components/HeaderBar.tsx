@@ -5,9 +5,16 @@ import { useTheme } from "../state/ThemeContext";
 interface HeaderBarProps {
   isGridLocked: boolean;
   onToggleGridLock: () => void;
+  activeDashboard: "classic" | "life";
+  onSwitchDashboard: (dashboard: "classic" | "life") => void;
 }
 
-export default function HeaderBar({ isGridLocked, onToggleGridLock }: HeaderBarProps) {
+export default function HeaderBar({
+  isGridLocked,
+  onToggleGridLock,
+  activeDashboard,
+  onSwitchDashboard
+}: HeaderBarProps) {
   const { theme, setTheme } = useTheme();
   const { auth, logout } = useAuth();
   const avatarLabel = auth?.email?.trim().charAt(0).toUpperCase() || "U";
@@ -66,6 +73,26 @@ export default function HeaderBar({ isGridLocked, onToggleGridLock }: HeaderBarP
             <circle cx="19" cy="19" r="1.5" />
           </svg>
         </button>
+        <div className="dashboard-view-switch" role="tablist" aria-label="Dashboard view selector">
+          <button
+            type="button"
+            role="tab"
+            className={`dashboard-view-btn${activeDashboard === "classic" ? " is-active" : ""}`}
+            aria-selected={activeDashboard === "classic"}
+            onClick={() => onSwitchDashboard("classic")}
+          >
+            Classic
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`dashboard-view-btn${activeDashboard === "life" ? " is-active" : ""}`}
+            aria-selected={activeDashboard === "life"}
+            onClick={() => onSwitchDashboard("life")}
+          >
+            Life App
+          </button>
+        </div>
         <div className="dashboard-theme-wrap" ref={themeMenuRef}>
           <button
             type="button"
@@ -95,9 +122,11 @@ export default function HeaderBar({ isGridLocked, onToggleGridLock }: HeaderBarP
             </div>
           )}
         </div>
-        <button type="button" className="dashboard-lock-btn" onClick={onToggleGridLock}>
-          {isGridLocked ? "Unlock Layout" : "Lock Layout"}
-        </button>
+        {activeDashboard === "classic" && (
+          <button type="button" className="dashboard-lock-btn" onClick={onToggleGridLock}>
+            {isGridLocked ? "Unlock Layout" : "Lock Layout"}
+          </button>
+        )}
         {auth && (
           <button
             type="button"
