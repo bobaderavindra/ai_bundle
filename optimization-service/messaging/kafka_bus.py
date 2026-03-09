@@ -20,7 +20,6 @@ class KafkaBus:
         self.bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", DEFAULT_BOOTSTRAP_SERVERS)
         self.consumer_group = os.getenv("OPTIMIZATION_CONSUMER_GROUP", "optimization-service")
         self.consume_topics = _csv_topics(
-            #os.getenv("OPTIMIZATION_CONSUME_TOPICS", "portfolio.trade.executed")
             os.getenv("OPTIMIZATION_CONSUME_TOPICS", "portfolio.trade.executed")
         )
         self.publish_topic = os.getenv(

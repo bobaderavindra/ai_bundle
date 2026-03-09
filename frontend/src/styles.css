@@ -1012,6 +1012,23 @@ body {
   gap: 10px;
 }
 
+.ticker-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ticker-form input,
+.ticker-form button {
+  margin-top: 0 !important;
+}
+
+.ticker-form button {
+  width: auto !important;
+  min-width: 88px;
+}
+
 .ticker-item {
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -1019,6 +1036,16 @@ body {
   display: flex;
   justify-content: space-between;
   background: var(--surface-soft);
+  cursor: pointer;
+  margin-top: 0 !important;
+  width: 100% !important;
+  color: inherit !important;
+  font-weight: inherit !important;
+}
+
+.ticker-item.is-active {
+  border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-soft));
 }
 
 .ticker-item span {
@@ -1030,6 +1057,76 @@ body {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.optimizer-controls {
+  margin-bottom: 10px;
+}
+
+.optimizer-assets {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.optimizer-asset-row {
+  display: grid;
+  grid-template-columns: 72px 1fr 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.optimizer-asset-row strong {
+  font-size: 0.9rem;
+}
+
+.optimizer-asset-row input {
+  margin-top: 0 !important;
+}
+
+.optimizer-matrix-wrap {
+  margin: 10px 0;
+}
+
+.optimizer-matrix {
+  overflow: auto;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  padding: 8px;
+}
+
+.optimizer-matrix table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 420px;
+}
+
+.optimizer-matrix th,
+.optimizer-matrix td {
+  text-align: left;
+  padding: 6px;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+
+.optimizer-matrix td input {
+  margin-top: 0 !important;
+  padding: 7px 8px !important;
+}
+
+.optimizer-result {
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+  background: var(--surface-soft);
+}
+
+.optimizer-allocation-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .dropzone {

@@ -7,6 +7,7 @@ import AllocationChart from "./components/AllocationChart";
 import StrategyBuilder from "./components/StrategyBuilder";
 import TradePanel from "./components/TradePanel";
 import AdminPanel from "./components/AdminPanel";
+import OptimizerPanel from "./components/OptimizerPanel";
 import LifeMobileDashboard from "./components/LifeMobileDashboard";
 import { useAuth } from "./state/AuthContext";
 
@@ -32,6 +33,8 @@ const DASHBOARD_VIEW_STORAGE_KEY = "investai.dashboard.activeView";
 
 export default function App() {
   const { auth } = useAuth();
+  const [watchSymbols, setWatchSymbols] = useState<string[]>(["AAPL", "MSFT", "GOOGL", "TSLA"]);
+  const [selectedSymbol, setSelectedSymbol] = useState<string>("AAPL");
 
   if (!auth) {
     return (
@@ -88,7 +91,17 @@ export default function App() {
       {
         id: "live-prices",
         title: "Live Prices",
-        content: <StockTicker />,
+        content: (
+          <StockTicker
+            symbols={watchSymbols}
+            activeSymbol={selectedSymbol}
+            onSelectSymbol={setSelectedSymbol}
+            onAddSymbol={(symbol) => {
+              setWatchSymbols((prev) => (prev.includes(symbol) ? prev : [...prev, symbol]));
+              setSelectedSymbol(symbol);
+            }}
+          />
+        ),
         defaultSize: { colSpan: 4, rowSpan: 1 }
       },
       {
@@ -100,7 +113,7 @@ export default function App() {
       {
         id: "advanced-chart",
         title: "Advanced Chart",
-        content: <CandleChart />,
+        content: <CandleChart symbol={selectedSymbol} />,
         defaultSize: { colSpan: 8, rowSpan: 2 }
       },
       {
@@ -108,6 +121,12 @@ export default function App() {
         title: "Portfolio Allocation",
         content: <AllocationChart />,
         defaultSize: { colSpan: 4, rowSpan: 2 }
+      },
+      {
+        id: "portfolio-optimizer",
+        title: "Portfolio Optimizer",
+        content: <OptimizerPanel symbols={watchSymbols} />,
+        defaultSize: { colSpan: 8, rowSpan: 2 }
       },
       {
         id: "strategy-builder",
@@ -123,7 +142,7 @@ export default function App() {
         defaultSize: { colSpan: 4, rowSpan: 1 }
       }
     ],
-    []
+    [selectedSymbol, watchSymbols]
   );
 
   const visibleWidgets = useMemo(

@@ -2,16 +2,26 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { config } from "../lib/config";
 import type { PriceTick } from "../types";
 
-const symbols = ["AAPL", "MSFT", "GOOGL", "TSLA"];
+const defaultSymbols = ["AAPL", "MSFT", "GOOGL", "TSLA"];
 
 function randomWalk(prev: number) {
   const delta = (Math.random() - 0.5) * 1.4;
   return Number(Math.max(prev + delta, 1).toFixed(2));
 }
 
-export function useStockStream() {
+function seedPriceForSymbol(symbol: string) {
+  let hash = 0;
+  for (let i = 0; i < symbol.length; i++) hash = (hash * 31 + symbol.charCodeAt(i)) >>> 0;
+  return 50 + (hash % 500);
+}
+
+export function useStockStream(symbols: string[] = defaultSymbols) {
   const [ticks, setTicks] = useState<Record<string, PriceTick>>({});
   const fallbackTimer = useRef<number | null>(null);
+  const normalizedSymbols = useMemo(
+    () => (symbols.length ? symbols.map((symbol) => symbol.toUpperCase()) : defaultSymbols),
+    [symbols]
+  );
 
   useEffect(() => {
     if (config.stockWsUrl) {
@@ -33,22 +43,15 @@ export function useStockStream() {
     return () => {
       if (fallbackTimer.current) window.clearInterval(fallbackTimer.current);
     };
-  }, []);
+  }, [normalizedSymbols]);
 
   function startFallback() {
-    if (fallbackTimer.current) return;
-
-    const seed: Record<string, number> = {
-      AAPL: 186,
-      MSFT: 428,
-      GOOGL: 172,
-      TSLA: 242
-    };
+    if (fallbackTimer.current) window.clearInterval(fallbackTimer.current);
     fallbackTimer.current = window.setInterval(() => {
       setTicks((old) => {
         const next: Record<string, PriceTick> = { ...old };
-        symbols.forEach((symbol) => {
-          const prev = next[symbol]?.price ?? seed[symbol];
+        normalizedSymbols.forEach((symbol) => {
+          const prev = next[symbol]?.price ?? seedPriceForSymbol(symbol);
           next[symbol] = { symbol, price: randomWalk(prev), ts: Date.now() };
         });
         return next;
@@ -56,5 +59,11 @@ export function useStockStream() {
     }, 1200);
   }
 
-  return useMemo(() => Object.values(ticks).sort((a, b) => a.symbol.localeCompare(b.symbol)), [ticks]);
+  return useMemo(
+    () =>
+      Object.values(ticks)
+        .filter((tick) => normalizedSymbols.includes(tick.symbol))
+        .sort((a, b) => a.symbol.localeCompare(b.symbol)),
+    [normalizedSymbols, ticks]
+  );
 }

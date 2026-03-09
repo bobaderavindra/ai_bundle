@@ -1,15 +1,41 @@
 import { useEffect, useMemo, useRef } from "react";
 import { createChart, IChartApi, UTCTimestamp } from "lightweight-charts";
 
-function buildCandles() {
+const STOCK_NAMES: Record<string, string> = {
+  AAPL: "Apple Inc.",
+  MSFT: "Microsoft Corporation",
+  GOOGL: "Alphabet Inc.",
+  TSLA: "Tesla, Inc.",
+  NVDA: "NVIDIA Corporation",
+  AMZN: "Amazon.com, Inc.",
+  META: "Meta Platforms, Inc."
+};
+
+function seededRandom(seed: number) {
+  let x = seed % 2147483647;
+  if (x <= 0) x += 2147483646;
+  return () => {
+    x = (x * 16807) % 2147483647;
+    return (x - 1) / 2147483646;
+  };
+}
+
+function symbolSeed(symbol: string) {
+  let hash = 0;
+  for (let i = 0; i < symbol.length; i++) hash = (hash * 37 + symbol.charCodeAt(i)) >>> 0;
+  return hash || 1;
+}
+
+function buildCandles(symbol: string) {
+  const rand = seededRandom(symbolSeed(symbol));
   const data: Array<{ time: UTCTimestamp; open: number; high: number; low: number; close: number }> = [];
-  let p = 180;
+  let p = 80 + (symbolSeed(symbol) % 180);
   for (let i = 0; i < 90; i++) {
     const open = p;
-    const drift = (Math.random() - 0.5) * 4;
+    const drift = (rand() - 0.5) * 4;
     const close = Math.max(1, open + drift);
-    const high = Math.max(open, close) + Math.random() * 1.8;
-    const low = Math.min(open, close) - Math.random() * 1.8;
+    const high = Math.max(open, close) + rand() * 1.8;
+    const low = Math.min(open, close) - rand() * 1.8;
     p = close;
     data.push({
       time: (Math.floor(Date.now() / 1000) - (90 - i) * 86400) as UTCTimestamp,
@@ -30,10 +56,15 @@ function sma(values: number[], period: number) {
   });
 }
 
-export default function CandleChart() {
+interface CandleChartProps {
+  symbol: string;
+}
+
+export default function CandleChart({ symbol }: CandleChartProps) {
   const ref = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const candles = useMemo(() => buildCandles(), []);
+  const stockName = STOCK_NAMES[symbol] ?? symbol;
+  const candles = useMemo(() => buildCandles(symbol), [symbol]);
 
   useEffect(() => {
     if (!ref.current) return;
@@ -69,7 +100,9 @@ export default function CandleChart() {
 
   return (
     <div className="card">
-      <h3>Advanced Chart (Candles + SMA14)</h3>
+      <h3>
+        Advanced Chart: {stockName} ({symbol}) (Candles + SMA14)
+      </h3>
       <div ref={ref} />
     </div>
   );
