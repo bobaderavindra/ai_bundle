@@ -10,18 +10,25 @@ export default function TradePanel() {
   const [quantity, setQuantity] = useState("10");
   const [price, setPrice] = useState("180");
   const [result, setResult] = useState("");
+  const uuidRegex =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
   if (!auth) return null;
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (!auth) return;
+    const trimmedPortfolioId = portfolioId.trim();
+    if (!uuidRegex.test(trimmedPortfolioId)) {
+      setResult("Portfolio ID must be a valid UUID");
+      return;
+    }
     try {
       const res = await api<{ id: string }>("/trade", {
         method: "POST",
         body: JSON.stringify({
-          portfolioId,
-          symbol,
+          portfolioId: trimmedPortfolioId,
+          symbol: symbol.trim(),
           tradeType,
           quantity: Number(quantity),
           price: Number(price)

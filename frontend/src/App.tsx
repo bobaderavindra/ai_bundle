@@ -36,56 +36,6 @@ export default function App() {
   const [watchSymbols, setWatchSymbols] = useState<string[]>(["AAPL", "MSFT", "GOOGL", "TSLA"]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>("AAPL");
 
-  if (!auth) {
-    return (
-      <main className="auth-shell">
-        <header className="auth-topbar">
-          <div className="auth-brand">
-            <span className="auth-brand-logo" aria-hidden="true">
-              <span className="auth-brand-logo-shine" />
-              <span className="auth-brand-logo-core">IA</span>
-            </span>
-            <span className="auth-brand-text-wrap">
-              <span className="auth-brand-text">InvestAI</span>
-              <span className="auth-brand-subtext">SAR Intelligence Suite</span>
-            </span>
-          </div>
-          <a className="auth-top-link" href="#login">
-            Sign in
-          </a>
-        </header>
-
-        <section className="auth-layout">
-          <article className="auth-hero">
-            <p className="auth-kicker">Welcome back</p>
-            <h1>Build smarter portfolios with AI-driven insights.</h1>
-            <p>
-              Analyze risk, optimize allocation, and execute strategy in one platform designed for modern investment
-              teams.
-            </p>
-            <div className="auth-hero-metrics">
-              <div className="auth-metric">
-                <strong>3 Services</strong>
-                <span>Risk, Research, Optimization</span>
-              </div>
-              <div className="auth-metric">
-                <strong>Real-time</strong>
-                <span>Portfolio intelligence</span>
-              </div>
-              <div className="auth-metric">
-                <strong>Secure</strong>
-                <span>JWT-based access control</span>
-              </div>
-            </div>
-          </article>
-          <div id="login">
-            <LoginPanel />
-          </div>
-        </section>
-      </main>
-    );
-  }
-
   const widgetDefs = useMemo<WidgetDef[]>(
     () => [
       {
@@ -146,8 +96,8 @@ export default function App() {
   );
 
   const visibleWidgets = useMemo(
-    () => widgetDefs.filter((widget) => !widget.adminOnly || auth.role === "ADMIN"),
-    [auth.role, widgetDefs]
+    () => (auth ? widgetDefs.filter((widget) => !widget.adminOnly || auth.role === "ADMIN") : []),
+    [auth, widgetDefs]
   );
 
   const [widgetOrder, setWidgetOrder] = useState<string[]>(() => visibleWidgets.map((widget) => widget.id));
@@ -339,6 +289,56 @@ export default function App() {
       })}
     </section>
   );
+
+  if (!auth) {
+    return (
+      <main className="auth-shell">
+        <header className="auth-topbar">
+          <div className="auth-brand">
+            <span className="auth-brand-logo" aria-hidden="true">
+              <span className="auth-brand-logo-shine" />
+              <span className="auth-brand-logo-core">IA</span>
+            </span>
+            <span className="auth-brand-text-wrap">
+              <span className="auth-brand-text">InvestAI</span>
+              <span className="auth-brand-subtext">SAR Intelligence Suite</span>
+            </span>
+          </div>
+          <a className="auth-top-link" href="#login">
+            Sign in
+          </a>
+        </header>
+
+        <section className="auth-layout">
+          <article className="auth-hero">
+            <p className="auth-kicker">Welcome back</p>
+            <h1>Build smarter portfolios with AI-driven insights.</h1>
+            <p>
+              Analyze risk, optimize allocation, and execute strategy in one platform designed for modern investment
+              teams.
+            </p>
+            <div className="auth-hero-metrics">
+              <div className="auth-metric">
+                <strong>3 Services</strong>
+                <span>Risk, Research, Optimization</span>
+              </div>
+              <div className="auth-metric">
+                <strong>Real-time</strong>
+                <span>Portfolio intelligence</span>
+              </div>
+              <div className="auth-metric">
+                <strong>Secure</strong>
+                <span>JWT-based access control</span>
+              </div>
+            </div>
+          </article>
+          <div id="login">
+            <LoginPanel />
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   return (
     <main className="shell dashboard-shell">

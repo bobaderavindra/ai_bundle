@@ -19,6 +19,74 @@ interface MeanVarianceResponse {
   sharpeRatio: number;
 }
 
+type InsightTone = "good" | "caution";
+
+interface OptimizerInsight {
+  tone: InsightTone;
+  text: string;
+}
+
+function buildInsights(
+  assets: AssetForm[],
+  correlationMatrix: number[][],
+  result: MeanVarianceResponse
+): OptimizerInsight[] {
+  const insights: OptimizerInsight[] = [];
+  const weightBySymbol = new Map(result.suggestedAllocation.map((item) => [item.symbol, item.weight]));
+
+  let strongestPair: { a: string; b: string; corr: number } | null = null;
+  for (let i = 0; i < assets.length; i++) {
+    for (let j = i + 1; j < assets.length; j++) {
+      const corr = correlationMatrix[i]?.[j] ?? 0;
+      if (!strongestPair || corr > strongestPair.corr) {
+        strongestPair = { a: assets[i].symbol, b: assets[j].symbol, corr };
+      }
+    }
+  }
+
+  if (strongestPair && strongestPair.corr >= 0.7) {
+    const combinedWeight =
+      (weightBySymbol.get(strongestPair.a) ?? 0) + (weightBySymbol.get(strongestPair.b) ?? 0);
+    insights.push({
+      tone: "caution",
+      text: `${strongestPair.a} and ${strongestPair.b} are highly correlated (${strongestPair.corr.toFixed(
+        2
+      )}). Optimizer keeps their combined weight at ${(combinedWeight * 100).toFixed(
+        1
+      )}% to avoid concentration in similar risk drivers.`
+    });
+  }
+
+  const assetsWithScore = assets
+    .map((asset) => {
+      const expectedReturn = Number(asset.expectedReturn);
+      const volatility = Number(asset.volatility);
+      const score = volatility > 0 ? expectedReturn / volatility : -Infinity;
+      return { symbol: asset.symbol, score };
+    })
+    .sort((a, b) => b.score - a.score);
+
+  const best = assetsWithScore[0];
+  if (best) {
+    const bestWeight = weightBySymbol.get(best.symbol) ?? 0;
+    insights.push({
+      tone: "good",
+      text: `${best.symbol} has the strongest return-to-risk profile in your inputs, so optimizer increases its allocation to ${(bestWeight * 100).toFixed(
+        1
+      )}% when diversification allows it.`
+    });
+  }
+
+  insights.push({
+    tone: "good",
+    text: `Target is risk-adjusted efficiency: portfolio Sharpe is ${result.sharpeRatio.toFixed(
+      3
+    )}, which means maximizing return per unit of volatility, not just raw return.`
+  });
+
+  return insights;
+}
+
 function buildCorrelation(size: number, offDiagonal = 0.3): number[][] {
   return Array.from({ length: size }, (_, row) =>
     Array.from({ length: size }, (_, col) => (row === col ? 1 : offDiagonal))
@@ -34,6 +102,7 @@ export default function OptimizerPanel({ symbols }: OptimizerPanelProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState<MeanVarianceResponse | null>(null);
+  const [insights, setInsights] = useState<OptimizerInsight[]>([]);
 
   useEffect(() => {
     const nextAssets = symbols.map((symbol) => {
@@ -114,6 +183,7 @@ export default function OptimizerPanel({ symbols }: OptimizerPanelProps) {
     setLoading(true);
     setError("");
     setResult(null);
+    setInsights([]);
 
     try {
       const response = await api<MeanVarianceResponse>(
@@ -130,6 +200,7 @@ export default function OptimizerPanel({ symbols }: OptimizerPanelProps) {
         auth.accessToken
       );
       setResult(response);
+      setInsights(buildInsights(assets, correlationMatrix, response));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Optimization request failed.");
     } finally {
@@ -227,6 +298,16 @@ export default function OptimizerPanel({ symbols }: OptimizerPanelProps) {
             Expected Return: {(result.expectedReturn * 100).toFixed(2)}% | Volatility:{" "}
             {(result.expectedVolatility * 100).toFixed(2)}% | Sharpe: {result.sharpeRatio.toFixed(3)}
           </small>
+          {insights.length > 0 && (
+            <ul className="optimizer-insights">
+              {insights.map((insight) => (
+                <li key={insight.text} className={`optimizer-insight-line tone-${insight.tone}`}>
+                  <span className={`optimizer-insight-tag tone-${insight.tone}`}>{insight.tone.toUpperCase()}</span>
+                  <span>{insight.text}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </form>

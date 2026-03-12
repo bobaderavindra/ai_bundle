@@ -15,8 +15,20 @@ export async function api<T>(
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || `Request failed ${res.status}`);
+    const contentType = res.headers.get("content-type") || "";
+    let message = `Request failed ${res.status}`;
+    if (contentType.includes("application/json")) {
+      try {
+        const data = (await res.json()) as { error?: string; message?: string };
+        message = data?.error || data?.message || JSON.stringify(data);
+      } catch {
+        message = `Request failed ${res.status}`;
+      }
+    } else {
+      const text = await res.text();
+      if (text) message = text;
+    }
+    throw new Error(message);
   }
 
   if (res.status === 204) return undefined as T;

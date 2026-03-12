@@ -53,4 +53,9 @@ public class TradeController {
     public ResponseEntity<Map<String, List<?>>> recentEvents(@RequestHeader("X-User-Id") String userId) {
         return ResponseEntity.ok(Map.of("events", tradeEventConsumer.getRecentEvents()));
     }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handle(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", ex.getMessage()));
+    }
 }

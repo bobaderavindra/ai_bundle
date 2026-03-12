@@ -1129,6 +1129,53 @@ body {
   gap: 6px;
 }
 
+.optimizer-insights {
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.optimizer-insights li {
+  color: var(--muted);
+  margin-top: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.optimizer-insight-line.tone-good {
+  background: rgba(30, 143, 95, 0.12);
+  border-color: rgba(30, 143, 95, 0.28);
+  color: #14573b;
+}
+
+.optimizer-insight-line.tone-caution {
+  background: rgba(212, 87, 69, 0.12);
+  border-color: rgba(212, 87, 69, 0.28);
+  color: #872e23;
+}
+
+.optimizer-insight-tag {
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}
+
+.optimizer-insight-tag.tone-good {
+  background: rgba(30, 143, 95, 0.22);
+  color: #125437;
+}
+
+.optimizer-insight-tag.tone-caution {
+  background: rgba(212, 87, 69, 0.22);
+  color: #7f291f;
+}
+
 .dropzone {
   border: 2px dashed var(--border);
   border-radius: 10px;

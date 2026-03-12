@@ -90,6 +90,7 @@ class RebalanceRequest(BaseModel):
 def health():
     kafka_status = kafka_bus.status()
     warnings = kafka_status.get("warnings", [])
+
     if warnings:
         return {
             "status": "degraded",
