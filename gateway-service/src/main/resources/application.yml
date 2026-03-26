@@ -44,14 +44,14 @@ spring:
           predicates:
             - Path=/api/portfolio/**
           filters:
-            - RewritePath=/api/portfolio/?(?<segment>.*), /portfolio/${segment}
+            - RewritePath=/api/portfolio(?<segment>/?.*), /portfolio${segment}
 
         - id: portfolio-trade
           uri: ${investai.portfolio-service-url}
           predicates:
             - Path=/api/trade,/api/trade/**
           filters:
-            - RewritePath=/api/trade/?(?<segment>.*), /trade/${segment}
+            - RewritePath=/api/trade(?<segment>/?.*), /trade${segment}
 
         - id: portfolio-allocation
           uri: ${investai.portfolio-service-url}

@@ -12,6 +12,7 @@ Enterprise AI investment platform using a microservices architecture with local-
 - `ml-service` (FastAPI prediction starter, `8085`)
 - `optimization-service` (FastAPI portfolio optimization, `8086`)
 - `frontend` (React fintech dashboard via Nginx, `3000`)
+- `redis` (cache, `6379`)
 
 ## Local Run
 
@@ -39,6 +40,7 @@ Health checks:
 - `http://localhost:8085/health`
 - `http://localhost:8086/health`
 - `http://localhost:5000` (MLflow UI)
+ - Redis: `redis-cli ping` -> `PONG`
 
 ## API Quickstart
 
@@ -183,6 +185,45 @@ curl -X GET http://localhost:8080/api/optimization/events/status \
 curl -X GET http://localhost:8080/api/optimization/events/recent \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
+
+## Kafka Communication Overview
+
+Kafka is used for asynchronous, decoupled communication between services. Each service publishes domain events to a topic and other services subscribe without direct HTTP calls.
+
+Topics in use:
+- `portfolio.trade.executed`  
+  Produced by `portfolio-service` when a trade is executed. Consumed by `portfolio-service` (for recent event cache), `optimization-service`, and `risk-service`.
+- `optimization.events`  
+  Produced by `optimization-service` for optimization request lifecycle events. Consumed by `risk-service`.
+- `risk.events`  
+  Produced by `risk-service` for VaR and drawdown lifecycle events. No explicit consumer is defined yet (available for future services or observability).
+
+How events flow:
+- Services publish a JSON envelope with `eventType`, `service`, `timestamp`, and `payload`.
+- `risk-service` and `optimization-service` run a KafkaBus that starts a producer and a background consumer thread on startup.
+- Each service can expose recent consumed messages via `/events/recent` endpoints for quick inspection.
+
+Config wiring:
+- `KAFKA_BOOTSTRAP_SERVERS` points services to the broker (`kafka:9092` in Docker Compose).
+- Topic names and consumer groups are configured through env vars:
+  - `PORTFOLIO_TRADE_TOPIC`
+  - `OPTIMIZATION_EVENT_TOPIC`
+  - `RISK_EVENT_TOPIC`
+  - `OPTIMIZATION_CONSUME_TOPICS`
+  - `RISK_CONSUME_TOPICS`
+
+## Redis Cache
+
+Portfolio reads are cached using Spring Cache + Redis with JSON serialization and per-cache TTLs:
+- `portfoliosByUser` (30s)
+- `portfolioById` (5m)
+- `allocationByPortfolio` (2m)
+
+Cache invalidation happens on portfolio mutations (create/update/addHolding/trade) to keep reads consistent.
+
+Redis config (portfolio-service):
+- `REDIS_HOST` (default `localhost`)
+- `REDIS_PORT` (default `6379`)
 
 ## Frontend Features
 

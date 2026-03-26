@@ -2,13 +2,9 @@ import { useEffect, useState } from "react";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
 import { api } from "../lib/api";
 import { useAuth } from "../state/AuthContext";
+import { ensureDefaultPortfolios, type PortfolioOption } from "../lib/portfolio";
 
 const colors = ["#0f9dff", "#06d6a0", "#ffd166", "#ef476f", "#8ecae6", "#ffb703"];
-
-interface Portfolio {
-  id: string;
-  name: string;
-}
 
 interface AllocationResponse {
   portfolioId: string;
@@ -19,16 +15,16 @@ interface AllocationResponse {
 export default function AllocationChart() {
   const { auth } = useAuth();
   const [portfolioId, setPortfolioId] = useState("");
-  const [options, setOptions] = useState<Portfolio[]>([]);
+  const [options, setOptions] = useState<PortfolioOption[]>([]);
   const [data, setData] = useState<AllocationResponse | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!auth) return;
-    api<Portfolio[]>(`/portfolio/${auth.userId}`, {}, auth.accessToken)
-      .then((p) => {
-        setOptions(p);
-        if (p.length) setPortfolioId(p[0].id);
+    ensureDefaultPortfolios(auth, ["Bank", "IT", "Oil"])
+      .then((items) => {
+        setOptions(items);
+        if (items.length) setPortfolioId(items[0].id);
       })
       .catch((e) => setError(e.message));
   }, [auth]);

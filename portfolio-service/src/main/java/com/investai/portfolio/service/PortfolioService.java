@@ -2,6 +2,7 @@ package com.investai.portfolio.service;
 
 import com.investai.portfolio.events.TradeEventPublisher;
 import com.investai.portfolio.events.TradeExecutedEvent;
+import com.investai.portfolio.config.CacheConfig;
 import com.investai.portfolio.model.Holding;
 import com.investai.portfolio.model.Portfolio;
 import com.investai.portfolio.model.Trade;
@@ -12,6 +13,9 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,15 +39,54 @@ public class PortfolioService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.PORTFOLIOS_BY_USER, key = "#userId.toString()")
     public Portfolio createPortfolio(UUID userId, String name) {
         return repository.save(new Portfolio(userId, name));
     }
 
+    @Cacheable(cacheNames = CacheConfig.PORTFOLIOS_BY_USER, key = "#userId")
     public List<Portfolio> listPortfolios(String userId) {
         return repository.findByUserId(parseUuid(userId, "userId"));
     }
 
+    @Cacheable(cacheNames = CacheConfig.PORTFOLIO_BY_ID, key = "#userId + ':' + #portfolioId")
+    public Portfolio getPortfolio(String userId, String portfolioId) {
+        UUID userUuid = parseUuid(userId, "userId");
+        UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
+
+        Portfolio portfolio = repository.findById(portfolioUuid)
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
+        if (!portfolio.getUserId().equals(userUuid)) {
+            throw new IllegalArgumentException("Access denied for portfolio");
+        }
+        return portfolio;
+    }
+
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.PORTFOLIOS_BY_USER, key = "#userId"),
+            @CacheEvict(cacheNames = CacheConfig.PORTFOLIO_BY_ID, key = "#userId + ':' + #portfolioId"),
+            @CacheEvict(cacheNames = CacheConfig.ALLOCATION_BY_PORTFOLIO, key = "#userId + ':' + #portfolioId")
+    })
+    public Portfolio updatePortfolioName(String userId, String portfolioId, String name) {
+        UUID userUuid = parseUuid(userId, "userId");
+        UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
+
+        Portfolio portfolio = repository.findById(portfolioUuid)
+                .orElseThrow(() -> new IllegalArgumentException("Portfolio not found"));
+        if (!portfolio.getUserId().equals(userUuid)) {
+            throw new IllegalArgumentException("Access denied for portfolio");
+        }
+        portfolio.setName(name);
+        return repository.save(portfolio);
+    }
+
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.PORTFOLIOS_BY_USER, key = "#userId"),
+            @CacheEvict(cacheNames = CacheConfig.PORTFOLIO_BY_ID, key = "#userId + ':' + #portfolioId"),
+            @CacheEvict(cacheNames = CacheConfig.ALLOCATION_BY_PORTFOLIO, key = "#userId + ':' + #portfolioId")
+    })
     public Portfolio addHolding(String userId, String portfolioId, String symbol, BigDecimal quantity, BigDecimal avgPrice) {
         UUID userUuid = parseUuid(userId, "userId");
         UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
@@ -59,6 +102,11 @@ public class PortfolioService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = CacheConfig.PORTFOLIOS_BY_USER, key = "#userId"),
+            @CacheEvict(cacheNames = CacheConfig.PORTFOLIO_BY_ID, key = "#userId + ':' + #portfolioId"),
+            @CacheEvict(cacheNames = CacheConfig.ALLOCATION_BY_PORTFOLIO, key = "#userId + ':' + #portfolioId")
+    })
     public Trade executeTrade(String userId, String portfolioId, String symbol, String tradeType, BigDecimal quantity, BigDecimal price) {
         UUID userUuid = parseUuid(userId, "userId");
         UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");
@@ -117,6 +165,7 @@ public class PortfolioService {
         return trade;
     }
 
+    @Cacheable(cacheNames = CacheConfig.ALLOCATION_BY_PORTFOLIO, key = "#userId + ':' + #portfolioId")
     public Map<String, Object> calculateAllocation(String userId, String portfolioId) {
         UUID userUuid = parseUuid(userId, "userId");
         UUID portfolioUuid = parseUuid(portfolioId, "portfolioId");

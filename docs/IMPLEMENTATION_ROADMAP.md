@@ -177,6 +177,9 @@ to infra traffic is direct (DB/Kafka/MLflow/OpenAI).
       - C:\RDC\kafka_2.12-3.9.2> bin\windows\kafka-console-consumer.bat --topic invest-topic --from-beginning --bootstrap-server localhost:9092
     - KAFKA TOPICS LISTS:
       - .\bin\windows\kafka-topics.bat --bootstrap-server localhost:9092 --list
+        - invest-topic
+        - optimization.events
+        - portfolio.trade.executed
 - KAFKA CHECKS:
   - Optimization: GET http://localhost:8086/optimization/events/recent
   - Optimization status: GET http://localhost:8086/optimization/events/status

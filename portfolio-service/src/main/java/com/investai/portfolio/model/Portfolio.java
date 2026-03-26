@@ -61,6 +61,10 @@ public class Portfolio {
         return holdings;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void addHolding(Holding holding) {
         this.holdings.add(holding);
     }

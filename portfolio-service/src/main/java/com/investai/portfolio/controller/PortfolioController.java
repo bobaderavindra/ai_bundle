@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +34,14 @@ public class PortfolioController {
         return ResponseEntity.ok(portfolioService.createPortfolio(UUID.fromString(userId), request.name()));
     }
 
+    @PostMapping("/create")
+    public ResponseEntity<Portfolio> createPortfolioAction(
+            @RequestHeader("X-User-Id") String userId,
+            @Valid @RequestBody CreatePortfolioRequest request
+    ) {
+        return ResponseEntity.ok(portfolioService.createPortfolio(UUID.fromString(userId), request.name()));
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<Portfolio>> listPortfolios(
             @PathVariable String userId,
@@ -42,6 +51,44 @@ public class PortfolioController {
             throw new IllegalArgumentException("Access denied for user");
         }
         return ResponseEntity.ok(portfolioService.listPortfolios(userId));
+    }
+
+    @GetMapping("/id/{portfolioId}")
+    public ResponseEntity<Portfolio> getPortfolio(
+            @PathVariable String portfolioId,
+            @RequestHeader("X-User-Id") String userId
+    ) {
+        return ResponseEntity.ok(portfolioService.getPortfolio(userId, portfolioId));
+    }
+
+    @PostMapping("/retrieve")
+    public ResponseEntity<?> retrievePortfolioAction(
+            @RequestHeader("X-User-Id") String userId,
+            @RequestBody(required = false) RetrievePortfolioRequest request
+    ) {
+        if (request != null && request.portfolioId() != null && !request.portfolioId().isBlank()) {
+            return ResponseEntity.ok(portfolioService.getPortfolio(userId, request.portfolioId()));
+        }
+        return ResponseEntity.ok(portfolioService.listPortfolios(userId));
+    }
+
+    @PutMapping("/{portfolioId}")
+    public ResponseEntity<Portfolio> updatePortfolio(
+            @RequestHeader("X-User-Id") String userId,
+            @PathVariable String portfolioId,
+            @Valid @RequestBody CreatePortfolioRequest request
+    ) {
+        return ResponseEntity.ok(portfolioService.updatePortfolioName(userId, portfolioId, request.name()));
+    }
+
+    @PostMapping("/modify")
+    public ResponseEntity<Portfolio> modifyPortfolioAction(
+            @RequestHeader("X-User-Id") String userId,
+            @Valid @RequestBody UpdatePortfolioRequest request
+    ) {
+        return ResponseEntity.ok(
+                portfolioService.updatePortfolioName(userId, request.portfolioId(), request.name())
+        );
     }
 
     @PostMapping("/{portfolioId}/holding")
