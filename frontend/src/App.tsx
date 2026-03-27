@@ -9,6 +9,9 @@ import TradePanel from "./components/TradePanel";
 import AdminPanel from "./components/AdminPanel";
 import OptimizerPanel from "./components/OptimizerPanel";
 import LifeMobileDashboard from "./components/LifeMobileDashboard";
+import RecipeChatbotDashboard from "./components/RecipeChatbotDashboard";
+import GroupExpenseDashboard from "./components/GroupExpenseDashboard";
+import AddExpensePage from "./components/AddExpensePage";
 import { useAuth } from "./state/AuthContext";
 
 interface WidgetSize {
@@ -109,12 +112,15 @@ export default function App() {
     if (typeof window === "undefined") return false;
     return window.localStorage.getItem(GRID_LOCK_STORAGE_KEY) === "locked";
   });
-  const [activeDashboard, setActiveDashboard] = useState<"classic" | "life">(() => {
+  const [activeDashboard, setActiveDashboard] = useState<"classic" | "life" | "chatbot" | "settle">(() => {
     if (typeof window === "undefined") return "life";
     const savedView = window.localStorage.getItem(DASHBOARD_VIEW_STORAGE_KEY);
-    if (savedView === "classic" || savedView === "life") return savedView;
+    if (savedView === "classic" || savedView === "life" || savedView === "chatbot" || savedView === "settle") {
+      return savedView;
+    }
     return "life";
   });
+  const [isSettleExpenseOpen, setIsSettleExpenseOpen] = useState(false);
 
   useEffect(() => {
     const visibleIds = new Set(visibleWidgets.map((widget) => widget.id));
@@ -142,6 +148,12 @@ export default function App() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     window.localStorage.setItem(DASHBOARD_VIEW_STORAGE_KEY, activeDashboard);
+  }, [activeDashboard]);
+
+  useEffect(() => {
+    if (activeDashboard !== "settle") {
+      setIsSettleExpenseOpen(false);
+    }
   }, [activeDashboard]);
 
   function moveWidget(id: string, direction: "up" | "down") {
@@ -353,7 +365,17 @@ export default function App() {
           activeDashboard={activeDashboard}
           onOpenMainDashboard={() => setActiveDashboard("life")}
           onOpenOtherDashboard={() => setActiveDashboard("classic")}
+          onOpenChatbotDashboard={() => setActiveDashboard("chatbot")}
+          onOpenSettleDashboard={() => setActiveDashboard("settle")}
           centerContent={classicDashboardContent}
+          chatbotContent={<RecipeChatbotDashboard />}
+          settleContent={
+            isSettleExpenseOpen ? (
+              <AddExpensePage onBack={() => setIsSettleExpenseOpen(false)} />
+            ) : (
+              <GroupExpenseDashboard onAddExpense={() => setIsSettleExpenseOpen(true)} />
+            )
+          }
         />
       </div>
     </main>

@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from fastapi import FastAPI, HTTPException
+import uvicorn
 from pydantic import BaseModel, Field, model_validator
 
 from engine.mean_variance import (
@@ -281,3 +282,7 @@ def recent_events():
 @app.get("/optimization/events/status")
 def events_status():
     return kafka_bus.status()
+
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8096, reload=True)

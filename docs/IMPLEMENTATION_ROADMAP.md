@@ -108,6 +108,19 @@ Use this roadmap to reach full interview-grade scope.
     .\.venv\Scripts\Activate.ps1
     pip install -r requirements.txt
     uvicorn api.main:app --host 0.0.0.0 --port 8095 --reload
+  - Commands without port From each service directory:
+    - ML service:
+      python -m api.main
+    
+    - Optimization service:
+      python app.py
+    
+    - Research service:
+      python app.py
+    
+    - Risk service:
+      python app.py
+  
   - cd optimization-service
     - uvicorn api.main:app --host 0.0.0.0 --port 8096 --reload
 

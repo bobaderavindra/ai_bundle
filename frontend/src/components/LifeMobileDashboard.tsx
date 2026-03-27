@@ -35,15 +35,23 @@ const subscriptions = [
 interface LifeMobileDashboardProps {
   onOpenOtherDashboard: () => void;
   onOpenMainDashboard: () => void;
-  activeDashboard: "classic" | "life";
+  onOpenChatbotDashboard: () => void;
+  onOpenSettleDashboard: () => void;
+  activeDashboard: "classic" | "life" | "chatbot" | "settle";
   centerContent?: ReactNode;
+  chatbotContent?: ReactNode;
+  settleContent?: ReactNode;
 }
 
 export default function LifeMobileDashboard({
   onOpenOtherDashboard,
   onOpenMainDashboard,
+  onOpenChatbotDashboard,
+  onOpenSettleDashboard,
   activeDashboard,
-  centerContent
+  centerContent,
+  chatbotContent,
+  settleContent
 }: LifeMobileDashboardProps) {
   const { logout } = useAuth();
 
@@ -71,6 +79,20 @@ export default function LifeMobileDashboard({
             >
               Investment Cockpit
             </button>
+            <button
+              type="button"
+              className={`life-nav-link-btn${activeDashboard === "chatbot" ? " is-active" : ""}`}
+              onClick={onOpenChatbotDashboard}
+            >
+              Recipe Chatbot
+            </button>
+            <button
+              type="button"
+              className={`life-nav-link-btn${activeDashboard === "settle" ? " is-active" : ""}`}
+              onClick={onOpenSettleDashboard}
+            >
+              Settle up
+            </button>
             <a href="#">All Expenses</a>
             <a href="#">Bill & Subscription</a>
             <a href="#">Investment</a>
@@ -78,6 +100,7 @@ export default function LifeMobileDashboard({
             <p>Tools</p>
             <a href="#">Insight</a>
             <a href="#">Analytics</a>
+            <a href="#">Recipe Chatbot</a>
             <p>Other</p>
             <a href="#">Setting</a>
             <a href="#">Help Center</a>
@@ -198,8 +221,12 @@ export default function LifeMobileDashboard({
                 </article>
               </section>
             </>
-          ) : (
+          ) : activeDashboard === "classic" ? (
             <section className="life-main-embedded">{centerContent}</section>
+          ) : activeDashboard === "chatbot" ? (
+            <section className="life-main-embedded">{chatbotContent}</section>
+          ) : (
+            <section className="life-main-embedded">{settleContent}</section>
           )}
         </div>
       </div>

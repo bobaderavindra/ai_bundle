@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+import uvicorn
 from pydantic import BaseModel, Field
 
 from document_parser.pdf_parser import extract_text_from_pdf_bytes
@@ -80,3 +81,7 @@ def ask(req: QueryRequest):
         return {"answer": answer, "retrieved": retrieved}
     except Exception as ex:
         raise HTTPException(status_code=500, detail=f"Ask failed: {str(ex)}") from ex
+
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8097, reload=True)

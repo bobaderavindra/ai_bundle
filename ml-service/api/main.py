@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+import uvicorn
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -85,3 +86,7 @@ def predict(req: InferRequest):
 @app.get("/ml/model-info")
 def model_info():
     return load_model_info()
+
+
+if __name__ == "__main__":
+    uvicorn.run("api.main:app", host="0.0.0.0", port=8095, reload=True)

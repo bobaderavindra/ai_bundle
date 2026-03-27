@@ -5,8 +5,8 @@ import { useTheme } from "../state/ThemeContext";
 interface HeaderBarProps {
   isGridLocked: boolean;
   onToggleGridLock: () => void;
-  activeDashboard: "classic" | "life";
-  onSwitchDashboard: (dashboard: "classic" | "life") => void;
+  activeDashboard: "classic" | "life" | "chatbot" | "settle";
+  onSwitchDashboard: (dashboard: "classic" | "life" | "chatbot" | "settle") => void;
 }
 
 export default function HeaderBar({
@@ -91,6 +91,24 @@ export default function HeaderBar({
             onClick={() => onSwitchDashboard("life")}
           >
             Life App
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`dashboard-view-btn${activeDashboard === "chatbot" ? " is-active" : ""}`}
+            aria-selected={activeDashboard === "chatbot"}
+            onClick={() => onSwitchDashboard("chatbot")}
+          >
+            Chef AI
+          </button>
+          <button
+            type="button"
+            role="tab"
+            className={`dashboard-view-btn${activeDashboard === "settle" ? " is-active" : ""}`}
+            aria-selected={activeDashboard === "settle"}
+            onClick={() => onSwitchDashboard("settle")}
+          >
+            Settle Up
           </button>
         </div>
         <div className="dashboard-theme-wrap" ref={themeMenuRef}>

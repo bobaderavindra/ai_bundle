@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+import uvicorn
 from pydantic import BaseModel, Field
 from typing import List
 
@@ -142,3 +143,7 @@ def events_status():
 @app.get("/risk/events/recent")
 def recent_events():
     return {"events": kafka_bus.recent_messages()}
+
+
+if __name__ == "__main__":
+    uvicorn.run("app:app", host="0.0.0.0", port=8098, reload=True)
