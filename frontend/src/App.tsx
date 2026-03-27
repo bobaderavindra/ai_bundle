@@ -12,6 +12,9 @@ import LifeMobileDashboard from "./components/LifeMobileDashboard";
 import RecipeChatbotDashboard from "./components/RecipeChatbotDashboard";
 import GroupExpenseDashboard from "./components/GroupExpenseDashboard";
 import AddExpensePage from "./components/AddExpensePage";
+import TimeSeriesShowcasePanel from "./components/TimeSeriesShowcasePanel";
+import { useTimeSeriesShowcase } from "./hooks/useTimeSeriesShowcase";
+import { getTimeSeriesScenario, type ScenarioId } from "./lib/timeSeriesShowcase";
 import { useAuth } from "./state/AuthContext";
 
 interface WidgetSize {
@@ -38,6 +41,24 @@ export default function App() {
   const { auth } = useAuth();
   const [watchSymbols, setWatchSymbols] = useState<string[]>(["AAPL", "MSFT", "GOOGL", "TSLA"]);
   const [selectedSymbol, setSelectedSymbol] = useState<string>("AAPL");
+  const [activeTimeSeriesScenarioId, setActiveTimeSeriesScenarioId] = useState<ScenarioId>("monthly-expenses");
+  const [timeSeriesReloadKey, setTimeSeriesReloadKey] = useState(0);
+  const activeTimeSeriesScenario = getTimeSeriesScenario(activeTimeSeriesScenarioId);
+  const timeSeriesState = useTimeSeriesShowcase({
+    accessToken: auth?.accessToken,
+    scenario: activeTimeSeriesScenario,
+    reloadKey: timeSeriesReloadKey
+  });
+  const timeSeriesPanel = (
+    <TimeSeriesShowcasePanel
+      activeScenarioId={activeTimeSeriesScenarioId}
+      onScenarioChange={setActiveTimeSeriesScenarioId}
+      onRefresh={() => setTimeSeriesReloadKey((current) => current + 1)}
+      snapshot={timeSeriesState.snapshot}
+      isLoading={timeSeriesState.isLoading}
+      error={timeSeriesState.error}
+    />
+  );
 
   const widgetDefs = useMemo<WidgetDef[]>(
     () => [
@@ -70,6 +91,12 @@ export default function App() {
         defaultSize: { colSpan: 8, rowSpan: 2 }
       },
       {
+        id: "time-series-studio",
+        title: "Time Series Studio",
+        content: timeSeriesPanel,
+        defaultSize: { colSpan: 8, rowSpan: 3 }
+      },
+      {
         id: "portfolio-allocation",
         title: "Portfolio Allocation",
         content: <AllocationChart />,
@@ -95,7 +122,7 @@ export default function App() {
         defaultSize: { colSpan: 4, rowSpan: 1 }
       }
     ],
-    [selectedSymbol, watchSymbols]
+    [selectedSymbol, timeSeriesPanel, watchSymbols]
   );
 
   const visibleWidgets = useMemo(
@@ -367,6 +394,10 @@ export default function App() {
           onOpenOtherDashboard={() => setActiveDashboard("classic")}
           onOpenChatbotDashboard={() => setActiveDashboard("chatbot")}
           onOpenSettleDashboard={() => setActiveDashboard("settle")}
+          timeSeriesContent={timeSeriesPanel}
+          activeTimeSeriesScenario={activeTimeSeriesScenario}
+          timeSeriesSnapshot={timeSeriesState.snapshot}
+          timeSeriesLoading={timeSeriesState.isLoading}
           centerContent={classicDashboardContent}
           chatbotContent={<RecipeChatbotDashboard />}
           settleContent={

@@ -136,6 +136,71 @@ curl -X GET http://localhost:8080/api/ml/model-info \
   -H "Authorization: Bearer <ACCESS_TOKEN>"
 ```
 
+10. ML time-series finance endpoints
+```bash
+curl -X POST http://localhost:8080/api/ml/time-series/forecast \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "series":[
+      {"date":"2026-03-01","amount":250,"category":"Food"},
+      {"date":"2026-03-02","amount":275,"category":"Food"},
+      {"date":"2026-03-03","amount":290,"category":"Bills"}
+    ],
+    "periods": 1,
+    "budgetLimit": 400
+  }'
+
+curl -X POST http://localhost:8080/api/ml/time-series/patterns \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "series":[
+      {"date":"2026-03-01","amount":250,"category":"Food"},
+      {"date":"2026-03-07","amount":480,"category":"Shopping"},
+      {"date":"2026-03-08","amount":520,"category":"Travel"}
+    ]
+  }'
+
+curl -X POST http://localhost:8080/api/ml/time-series/anomalies \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "series":[
+      {"date":"2026-03-01","amount":180,"category":"Food"},
+      {"date":"2026-03-02","amount":190,"category":"Food"},
+      {"date":"2026-03-03","amount":900,"category":"Travel"}
+    ],
+    "zScoreThreshold": 1.5
+  }'
+
+curl -X POST http://localhost:8080/api/ml/time-series/credit-utilization \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "series":[
+      {"date":"2026-03-01","amount":180},
+      {"date":"2026-03-02","amount":210},
+      {"date":"2026-03-03","amount":240}
+    ],
+    "limitAmount": 1200,
+    "currentBalance": 650
+  }'
+
+curl -X POST http://localhost:8080/api/ml/time-series/trip-budget \
+  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "series":[
+      {"date":"2026-03-01","amount":120,"category":"Food"},
+      {"date":"2026-03-02","amount":220,"category":"Travel"},
+      {"date":"2026-03-03","amount":140,"category":"Local Transport"}
+    ],
+    "tripDays": 5,
+    "totalBudget": 700
+  }'
+```
+
 MLflow:
 - Tracking server: `http://localhost:5000`
 - Tracks experiments for LSTM and Transformer training runs
@@ -197,6 +262,11 @@ Topics in use:
   Produced by `optimization-service` for optimization request lifecycle events. Consumed by `risk-service`.
 - `risk.events`  
   Produced by `risk-service` for VaR and drawdown lifecycle events. No explicit consumer is defined yet (available for future services or observability).
+
+Time-series integration path:
+- `portfolio-service` or an expense-oriented service can publish daily spend aggregates to a Kafka topic such as `expense-events`.
+- `ml-service` can consume those events, run the `/ml/time-series/*` calculations, and publish derived alerts or forecasts to a topic such as `ml-predictions`.
+- Gateway-backed APIs or websocket push can surface the latest forecast, anomaly alerts, and utilization risk in the frontend dashboard.
 
 How events flow:
 - Services publish a JSON envelope with `eventType`, `service`, `timestamp`, and `payload`.

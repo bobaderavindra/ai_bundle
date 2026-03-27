@@ -198,3 +198,25 @@ to infra traffic is direct (DB/Kafka/MLflow/OpenAI).
   - Optimization status: GET http://localhost:8086/optimization/events/status
   - Risk recent: GET http://localhost:8083/risk/events/recent
   - Risk status: GET http://localhost:8083/risk/events/status
+
+- Architecture
+- Frontend
+  -  ↓
+  -  Gateway
+  -  ↓
+  -  Portfolio Service → Kafka → ML Service
+  -                       ↓
+  -                   Predictions
+  -                       ↓
+  -                    Frontend
+
+- Kafka + ML Flow (Advanced)
+  - Expense Added → Kafka (expense-events)
+  -               ↓
+  -           ML Service
+  -               ↓
+  -      Prediction Generated
+  -               ↓
+  -  Kafka (ml-predictions)
+  -               ↓
+  -  Backend → Frontend

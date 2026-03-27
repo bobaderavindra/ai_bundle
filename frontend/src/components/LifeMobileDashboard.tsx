@@ -1,36 +1,7 @@
 import type { ReactNode } from "react";
+import { CURRENCY_PREFIX } from "../lib/currency";
+import type { ScenarioDefinition, TimeSeriesSnapshot } from "../lib/timeSeriesShowcase";
 import { useAuth } from "../state/AuthContext";
-
-const statCards = [
-  { title: "Account Balance", value: "₹8,98,450", trend: "+6% vs last month", tone: "violet" },
-  { title: "Monthly Expenses", value: "₹24,093", trend: "-2% vs last month", tone: "rose" },
-  { title: "Total Investment", value: "₹1,45,555", trend: "+4.5% growth", tone: "blue" },
-  { title: "Goal Progress", value: "60%", trend: "iPhone fund on track", tone: "gold" }
-];
-
-const topCategories = [
-  { name: "Food & Grocery", amount: "₹6,156" },
-  { name: "Investment", amount: "₹5,000" },
-  { name: "Shopping", amount: "₹4,356" },
-  { name: "Travelling", amount: "₹3,670" },
-  { name: "Bills", amount: "₹2,749" }
-];
-
-const recentExpenses = [
-  { amount: "₹2,100", category: "Shopping", sub: "Amazon", date: "31 May 2025", mode: "UPI" },
-  { amount: "₹299", category: "Movies", sub: "PVR", date: "28 May 2025", mode: "UPI" },
-  { amount: "₹5,000", category: "Investment", sub: "Grow", date: "24 May 2025", mode: "Bank" },
-  { amount: "₹2,460", category: "Travel", sub: "IRCTC", date: "20 May 2025", mode: "Card" },
-  { amount: "₹678", category: "Food", sub: "Swiggy", date: "15 May 2025", mode: "UPI" }
-];
-
-const subscriptions = [
-  { name: "Netflix", date: "1 Jun 2025", amount: "₹149" },
-  { name: "Spotify", date: "4 Aug 2025", amount: "₹49" },
-  { name: "Figma", date: "6 Jun 2025", amount: "₹399" },
-  { name: "WiFi", date: "21 Jun 2025", amount: "₹999" },
-  { name: "Electricity", date: "31 Jun 2025", amount: "₹1,265" }
-];
 
 interface LifeMobileDashboardProps {
   onOpenOtherDashboard: () => void;
@@ -41,6 +12,28 @@ interface LifeMobileDashboardProps {
   centerContent?: ReactNode;
   chatbotContent?: ReactNode;
   settleContent?: ReactNode;
+  timeSeriesContent?: ReactNode;
+  activeTimeSeriesScenario: ScenarioDefinition;
+  timeSeriesSnapshot: TimeSeriesSnapshot | null;
+  timeSeriesLoading: boolean;
+}
+
+function formatCurrency(amount: number) {
+  return `${CURRENCY_PREFIX}${amount.toFixed(0)}`;
+}
+
+function formatPercent(value: number) {
+  return `${Math.round(value)}%`;
+}
+
+function toDisplayName(email?: string) {
+  if (!email) return "User";
+  const localPart = email.split("@")[0] || "User";
+  return localPart
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
 }
 
 export default function LifeMobileDashboard({
@@ -51,9 +44,95 @@ export default function LifeMobileDashboard({
   activeDashboard,
   centerContent,
   chatbotContent,
-  settleContent
+  settleContent,
+  timeSeriesContent,
+  activeTimeSeriesScenario,
+  timeSeriesSnapshot,
+  timeSeriesLoading
 }: LifeMobileDashboardProps) {
-  const { logout } = useAuth();
+  const { auth, logout } = useAuth();
+  const displayName = toDisplayName(auth?.email);
+  const totalSpent = activeTimeSeriesScenario.series.reduce((sum, point) => sum + point.amount, 0);
+  const averageSpend = totalSpent / activeTimeSeriesScenario.series.length;
+  const budgetLimit = activeTimeSeriesScenario.budgetLimit;
+  const projectedExpense = timeSeriesSnapshot?.forecast.predictedExpense ?? averageSpend;
+  const balanceAmount = Math.max(0, budgetLimit * 3 - projectedExpense - activeTimeSeriesScenario.currentBalance);
+  const investmentAmount = Math.max(0, totalSpent * 1.8);
+  const goalProgress = Math.min(
+    100,
+    Math.round((projectedExpense / Math.max(activeTimeSeriesScenario.tripBudget, budgetLimit)) * 100)
+  );
+  const anomalyCount = timeSeriesSnapshot?.anomalies.alerts.length ?? 0;
+  const monthlyBars = activeTimeSeriesScenario.series.map((point) =>
+    Math.max(22, Math.min(100, Math.round((point.amount / Math.max(...activeTimeSeriesScenario.series.map((item) => item.amount))) * 100)))
+  );
+  const categoryTotals = activeTimeSeriesScenario.series.reduce<Record<string, number>>((acc, point) => {
+    const category = point.category ?? "General";
+    acc[category] = (acc[category] ?? 0) + point.amount;
+    return acc;
+  }, {});
+  const topCategories = Object.entries(categoryTotals)
+    .sort((left, right) => right[1] - left[1])
+    .slice(0, 5)
+    .map(([name, amount]) => ({ name, amount: formatCurrency(amount) }));
+  const statCards = [
+    {
+      title: "Account Balance",
+      value: formatCurrency(balanceAmount),
+      trend: `${activeTimeSeriesScenario.label} reserve after projected spend`,
+      tone: "violet"
+    },
+    {
+      title: "Monthly Expenses",
+      value: formatCurrency(totalSpent),
+      trend: `${timeSeriesSnapshot?.forecast.trend ?? "stable"} trend across ${activeTimeSeriesScenario.series.length} days`,
+      tone: "rose"
+    },
+    {
+      title: "Total Investment",
+      value: formatCurrency(investmentAmount),
+      trend: `${formatPercent((investmentAmount / Math.max(totalSpent, 1)) * 10)} growth proxy from active scenario`,
+      tone: "blue"
+    },
+    {
+      title: "Goal Progress",
+      value: formatPercent(goalProgress),
+      trend: `${activeTimeSeriesScenario.label} target is ${formatCurrency(activeTimeSeriesScenario.tripBudget)}`,
+      tone: "gold"
+    }
+  ];
+  const recentExpenses = activeTimeSeriesScenario.series
+    .slice()
+    .reverse()
+    .map((point, index) => ({
+      amount: formatCurrency(point.amount),
+      category: point.category ?? "General",
+      sub: activeTimeSeriesScenario.label,
+      date: point.date,
+      mode: index % 2 === 0 ? "Card" : "UPI"
+    }));
+  const subscriptions = [
+    {
+      name: `${activeTimeSeriesScenario.label} forecast`,
+      date: timeSeriesSnapshot?.forecast.forecast[0]?.date ?? "Pending",
+      amount: timeSeriesSnapshot ? formatCurrency(timeSeriesSnapshot.forecast.predictedExpense) : "--"
+    },
+    {
+      name: "Credit card bill",
+      date: `${Math.round((timeSeriesSnapshot?.credit.utilizationRate ?? 0) * 100)}% utilization`,
+      amount: timeSeriesSnapshot ? formatCurrency(timeSeriesSnapshot.credit.expectedBill) : "--"
+    },
+    {
+      name: "Trip budget projection",
+      date: `${timeSeriesSnapshot?.trip.tripDays ?? activeTimeSeriesScenario.tripDays} day horizon`,
+      amount: timeSeriesSnapshot ? formatCurrency(timeSeriesSnapshot.trip.projectedTotal) : "--"
+    },
+    {
+      name: "Budget control",
+      date: timeSeriesSnapshot?.forecast.budgetExceeded ? "Budget breach likely" : "Budget in range",
+      amount: formatCurrency(activeTimeSeriesScenario.budgetLimit)
+    }
+  ];
 
   return (
     <section className="life-dashboard-shell">
@@ -119,7 +198,7 @@ export default function LifeMobileDashboard({
             <>
               <header className="life-topbar">
                 <div>
-                  <h2>Hi, Ananya</h2>
+                  <h2>Hi, {displayName}</h2>
                   <p>Track your expenses and transactions</p>
                 </div>
                 <div className="life-topbar-actions">
@@ -142,21 +221,23 @@ export default function LifeMobileDashboard({
                 <article className="life-panel">
                   <header>
                     <h3>Monthly Expenses</h3>
-                    <small>6% more than last month</small>
+                    <small>
+                      {timeSeriesSnapshot
+                        ? `${formatCurrency(projectedExpense)} next forecast, ${anomalyCount} anomalies flagged`
+                        : "Loading active expense pattern"}
+                    </small>
                   </header>
                   <div className="life-bars" aria-hidden="true">
-                    <span style={{ height: "46%" }} />
-                    <span style={{ height: "74%" }} />
-                    <span style={{ height: "30%" }} />
-                    <span style={{ height: "52%" }} />
-                    <span style={{ height: "71%" }} />
-                    <span style={{ height: "63%" }} />
+                    {monthlyBars.map((height, index) => (
+                      <span key={`${activeTimeSeriesScenario.id}-${index}`} style={{ height: `${height}%` }} />
+                    ))}
                   </div>
                 </article>
 
                 <article className="life-panel">
                   <header>
                     <h3>Top Category</h3>
+                    <small>{timeSeriesSnapshot?.patterns.topCategory?.category ?? activeTimeSeriesScenario.label}</small>
                   </header>
                   <div className="life-donut-row">
                     <div className="life-donut" aria-hidden="true" />
@@ -172,10 +253,13 @@ export default function LifeMobileDashboard({
                 </article>
               </section>
 
+              {timeSeriesContent ? <section className="life-timeseries-slot">{timeSeriesContent}</section> : null}
+
               <section className="life-bottom-grid">
                 <article className="life-panel">
                   <header>
                     <h3>Recent Expenses</h3>
+                    <small>{activeTimeSeriesScenario.label}</small>
                   </header>
                   <div className="life-table-wrap">
                     <table>
@@ -205,7 +289,8 @@ export default function LifeMobileDashboard({
 
                 <article className="life-panel life-subscriptions">
                   <header>
-                    <h3>Bill & Subscription</h3>
+                    <h3>Bill, Credit & Trip Forecast</h3>
+                    <small>{timeSeriesLoading ? "Refreshing from ML service" : activeTimeSeriesScenario.label}</small>
                   </header>
                   <ul>
                     {subscriptions.map((item) => (
